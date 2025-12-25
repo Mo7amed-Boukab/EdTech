@@ -1,10 +1,11 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import ApiError from './ApiError';
+import type { Role } from '../types/user';
 
 export type AuthJwtPayload = {
   userId: string;
   email: string;
-  role: string;
+  role: Role;
 };
 
 function getJwtSecret(): string {
