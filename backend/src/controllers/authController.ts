@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { login, register } from '../services/authService';
 import { RegisterDto, LoginDto } from '../dtos/auth.dto';
 import ApiError from '../utils/ApiError';
+import { ApiResponse } from '../utils/ApiResponse';
 
 export class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
@@ -11,7 +12,7 @@ export class AuthController {
         throw ApiError.badRequest('Email and password are required');
       }
       const result = await login(email, password);
-      res.json(result);
+      ApiResponse.success(res, result, 'Login successful');
     } catch (err: any) {
       next(err instanceof ApiError ? err : ApiError.unauthorized(err.message));
     }
@@ -24,7 +25,7 @@ export class AuthController {
         throw ApiError.badRequest('All fields are required');
       }
       const user = await register({ fullName, email, password, role });
-      res.json(user);
+      ApiResponse.created(res, user, 'User registered successfully');
     } catch (err: any) {
       next(err instanceof ApiError ? err : ApiError.badRequest(err.message));
     }
