@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import prisma from '../config/prismaClient';
 import ApiError from '../utils/ApiError';
 import { AuthJwtPayload, generateToken } from '../utils/jwt';
-import type { User as DbUser } from '../generated/prisma';
+import type { User as DbUser } from '../generated/prisma/client';
 import { isRole, type Role } from '../types/user';
 
 export type PublicUser = Omit<DbUser, 'password'>;
