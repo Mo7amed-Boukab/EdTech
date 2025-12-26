@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import authRouter from './routes/auth';
 import classRouter from './routes/classes';
+import userRouter from './routes/users';
 import { errorHandler } from './middlewares/errorHandlerMiddleware';
 import { notFound } from './middlewares/notFoundMiddleware';
 import logger from './utils/logger';
@@ -30,6 +31,7 @@ app.use(morgan('dev'));
 
 app.use('/api/auth', authRouter);
 app.use('/api/classes', classRouter);
+app.use('/api/users', userRouter);
 
 app.use(notFound);
 app.use(errorHandler);
