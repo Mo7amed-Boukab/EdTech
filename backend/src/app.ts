@@ -8,6 +8,7 @@ import classRouter from './routes/classes';
 import userRouter from './routes/users';
 import subjectRouter from './routes/subjects';
 import sessionRouter from './routes/sessions';
+import statsRouter from './routes/stats';
 import { errorHandler } from './middlewares/errorHandlerMiddleware';
 import { notFound } from './middlewares/notFoundMiddleware';
 import logger from './utils/logger';
@@ -36,6 +37,7 @@ app.use('/api/classes', classRouter);
 app.use('/api/users', userRouter);
 app.use('/api/subjects', subjectRouter);
 app.use('/api/sessions', sessionRouter);
+app.use('/api/stats', statsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
