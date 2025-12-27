@@ -11,4 +11,7 @@ router.get('/', SessionController.getAll);
 router.put('/:id', authorizeRoles(['TEACHER']), SessionController.update);
 router.delete('/:id', authorizeRoles(['TEACHER']), SessionController.delete);
 
+router.post('/:id/attendance', authorizeRoles(['ADMIN', 'TEACHER']), SessionController.markAttendance);
+router.get('/:id/attendance', authorizeRoles(['ADMIN', 'TEACHER']), SessionController.getAttendance);
+
 export default router;

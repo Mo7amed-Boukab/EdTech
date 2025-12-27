@@ -65,10 +65,39 @@ export async function updateSession(id: string, data: UpdateSessionDto, requeste
         throw ApiError.forbidden('You can only manage your own sessions');
     }
 
+    // If updating classId or subjectId, validation is required
+    let targetClassId = session.classId;
+    let targetSubjectId = session.subjectId;
+
+    if (data.classId) {
+        const classItem = await prisma.class.findUnique({ where: { id: data.classId } });
+        if (!classItem) throw ApiError.notFound('Class not found');
+        targetClassId = data.classId;
+    }
+
+    if (data.subjectId) {
+        const subject = await prisma.subject.findUnique({ where: { id: data.subjectId } });
+        if (!subject) throw ApiError.notFound('Subject not found');
+        targetSubjectId = data.subjectId;
+    }
+
+    // If either changed, verify consistency
+    if (data.classId || data.subjectId) {
+        // We need to fetch the subject to check its classId, if we haven't already
+        const subject = await prisma.subject.findUnique({ where: { id: targetSubjectId } });
+        if (!subject) throw ApiError.notFound('Subject not found');
+
+        if (subject.classId !== targetClassId) {
+            throw ApiError.badRequest('Subject does not belong to the class');
+        }
+    }
+
     return prisma.session.update({
         where: { id },
         data: {
             ...(data.date && { date: new Date(data.date) }),
+            ...(data.classId && { classId: data.classId }),
+            ...(data.subjectId && { subjectId: data.subjectId }),
             ...(data.teacherId && { teacherId: data.teacherId })
         }
     });
