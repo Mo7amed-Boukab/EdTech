@@ -36,29 +36,46 @@ export async function createClass(data: CreateClassDto, adminId: string) {
     return newClass;
 }
 
-export async function getAllClasses(filters?: { teacherId?: string }) {
+export async function getAllClasses(filters?: { teacherId?: string }, page = 1, limit = 10) {
     const where: Prisma.ClassWhereInput = {};
 
     if (filters?.teacherId) {
         where.teacherId = filters.teacherId;
     }
 
-    return prisma.class.findMany({
-        where,
-        include: {
-            teacher: {
-                select: {
-                    id: true,
-                    fullName: true,
-                    email: true,
+    const skip = (page - 1) * limit;
+
+    const [classes, total] = await Promise.all([
+        prisma.class.findMany({
+            where,
+            include: {
+                teacher: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
+                _count: {
+                    select: { students: true },
                 },
             },
-            _count: {
-                select: { students: true },
-            },
-        },
-        orderBy: { createdAt: 'desc' },
-    });
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit
+        }),
+        prisma.class.count({ where })
+    ]);
+
+    return {
+        data: classes,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 }
 
 export async function getClassById(id: string) {
@@ -148,7 +165,7 @@ export async function deleteClass(id: string): Promise<void> {
 
     if (!existingClass) throw ApiError.notFound('Class not found');
 
-    // Optional: Prevent deletion if class has students
+    // Prevent deletion if class has students
     if (existingClass._count.students > 0) {
         throw ApiError.badRequest('Cannot delete class with enrolled students');
     }

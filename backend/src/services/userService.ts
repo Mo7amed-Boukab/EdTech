@@ -42,7 +42,7 @@ export async function createUser(data: CreateUserDto): Promise<PublicUser> {
     return safeUser;
 }
 
-export async function getAllUsers(filters?: { role?: string; classId?: string }) {
+export async function getAllUsers(filters?: { role?: string; classId?: string }, page = 1, limit = 10) {
     const where: Prisma.UserWhereInput = {};
     if (filters?.role) {
         if (!isRole(filters.role)) throw ApiError.badRequest('Invalid role filter');
@@ -52,20 +52,37 @@ export async function getAllUsers(filters?: { role?: string; classId?: string })
         where.classId = filters.classId;
     }
 
-    return prisma.user.findMany({
-        where,
-        select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            createdAt: true,
-            class: {
-                select: { id: true, name: true }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+        prisma.user.findMany({
+            where,
+            select: {
+                id: true,
+                fullName: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                class: {
+                    select: { id: true, name: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit
+        }),
+        prisma.user.count({ where })
+    ]);
+
+    return {
+        data: users,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 }
 
 export async function assignStudentToClass(studentId: string, classId: string) {

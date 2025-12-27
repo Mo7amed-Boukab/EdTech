@@ -6,5 +6,6 @@ export interface CreateSubjectDto {
 
 export interface UpdateSubjectDto {
     name?: string;
+    classId?: string;
     teacherId?: string;
 }

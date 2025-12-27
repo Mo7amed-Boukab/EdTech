@@ -21,12 +21,16 @@ export class SubjectController {
 
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const { classId, teacherId } = req.query;
+            const { classId, teacherId, page, limit } = req.query;
             const filters = {
                 ...(classId && { classId: String(classId) }),
                 ...(teacherId && { teacherId: String(teacherId) })
             };
-            const subjects = await getAllSubjects(filters);
+
+            const pageNum = Number(page) || 1;
+            const limitNum = Number(limit) || 10;
+
+            const subjects = await getAllSubjects(filters, pageNum, limitNum);
             ApiResponse.success(res, subjects, 'Subjects retrieved successfully');
         } catch (err: any) {
             next(err instanceof ApiError ? err : ApiError.internal(err.message));

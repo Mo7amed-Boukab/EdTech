@@ -23,11 +23,15 @@ export class ClassController {
 
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const { teacherId } = req.query;
+            const { teacherId, page, limit } = req.query;
             const filters = {
                 ...(teacherId && { teacherId: String(teacherId) })
             };
-            const classes = await getAllClasses(filters);
+
+            const pageNum = Number(page) || 1;
+            const limitNum = Number(limit) || 10;
+
+            const classes = await getAllClasses(filters, pageNum, limitNum);
             ApiResponse.success(res, classes, 'Classes retrieved successfully');
         } catch (err: any) {
             next(err instanceof ApiError ? err : ApiError.internal(err.message));

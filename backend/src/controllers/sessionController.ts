@@ -25,14 +25,18 @@ export class SessionController {
 
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const { classId, teacherId, subjectId, date } = req.query;
+            const { classId, teacherId, subjectId, date, page, limit } = req.query;
             const filters = {
                 ...(classId && { classId: String(classId) }),
                 ...(teacherId && { teacherId: String(teacherId) }),
                 ...(subjectId && { subjectId: String(subjectId) }),
                 ...(date && { date: String(date) })
             };
-            const sessions = await getAllSessions(filters);
+
+            const pageNum = Number(page) || 1;
+            const limitNum = Number(limit) || 20;
+
+            const sessions = await getAllSessions(filters, pageNum, limitNum);
             ApiResponse.success(res, sessions, 'Sessions retrieved successfully');
         } catch (err: any) {
             next(err instanceof ApiError ? err : ApiError.internal(err.message));

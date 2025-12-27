@@ -23,13 +23,17 @@ export class UserController {
 
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const { role, classId } = req.query;
+            const { role, classId, page, limit } = req.query;
             const filters = {
                 ...(role && { role: String(role) }),
                 ...(classId && { classId: String(classId) })
             };
-            const users = await getAllUsers(filters);
-            ApiResponse.success(res, users, 'Users retrieved successfully');
+
+            const pageNum = Number(page) || 1;
+            const limitNum = Number(limit) || 10;
+
+            const result = await getAllUsers(filters, pageNum, limitNum);
+            ApiResponse.success(res, result, 'Users retrieved successfully');
         } catch (err: any) {
             next(err instanceof ApiError ? err : ApiError.internal(err.message));
         }

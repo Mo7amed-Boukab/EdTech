@@ -37,19 +37,36 @@ export async function createSubject(data: CreateSubjectDto) {
     });
 }
 
-export async function getAllSubjects(filters?: { classId?: string; teacherId?: string }) {
+export async function getAllSubjects(filters?: { classId?: string; teacherId?: string }, page = 1, limit = 10) {
     const where: Prisma.SubjectWhereInput = {};
     if (filters?.classId) where.classId = filters.classId;
     if (filters?.teacherId) where.teacherId = filters.teacherId;
 
-    return prisma.subject.findMany({
-        where,
-        include: {
-            class: { select: { id: true, name: true } },
-            teacher: { select: { id: true, fullName: true, email: true } }
-        },
-        orderBy: { name: 'asc' }
-    });
+    const skip = (page - 1) * limit;
+
+    const [subjects, total] = await Promise.all([
+        prisma.subject.findMany({
+            where,
+            include: {
+                class: { select: { id: true, name: true } },
+                teacher: { select: { id: true, fullName: true, email: true } }
+            },
+            orderBy: { name: 'asc' },
+            skip,
+            take: limit
+        }),
+        prisma.subject.count({ where })
+    ]);
+
+    return {
+        data: subjects,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 }
 
 export async function getSubjectById(id: string) {
@@ -76,8 +93,6 @@ export async function updateSubject(id: string, data: UpdateSubjectDto, requeste
     }
 
     if (data.teacherId) {
-        // If changing teacher, verify new teacher
-        // Only Admin usually reassigns? Or owner passed it? Let's say Admin or Owner can reassign.
         const teacher = await prisma.user.findUnique({ where: { id: data.teacherId } });
         if (!teacher || teacher.role !== 'TEACHER') throw ApiError.badRequest('Invalid teacher ID');
     }
