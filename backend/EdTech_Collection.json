@@ -1,0 +1,492 @@
+{
+    "info": {
+        "_postman_id": "edtech-attendance-v1",
+        "name": "EdTech Attendance System",
+        "description": "Collection complète pour la gestion scolaire (Classes, Users, Subjects, Sessions, Attendance).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Auth",
+            "item": [
+                {
+                    "name": "Login (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@edtech.com\",\n    \"password\": \"admin123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/auth/login",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "2. Users (Admin Only)",
+            "item": [
+                {
+                    "name": "Create Teacher",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"fullName\": \"Professeur X\",\n    \"email\": \"profx@school.com\",\n    \"password\": \"123456\",\n    \"role\": \"TEACHER\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/users",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Student (Assign Class Directly)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"fullName\": \"Etudiant A\",\n    \"email\": \"student.a@school.com\",\n    \"password\": \"123456\",\n    \"role\": \"STUDENT\",\n    \"classId\": \"REMPLACER_PAR_UUID_CLASSE\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/users",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Students in a Class",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{url}}/users?role=STUDENT&classId=REMPLACER_PAR_UUID_CLASSE",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "role",
+                                    "value": "STUDENT"
+                                },
+                                {
+                                    "key": "classId",
+                                    "value": "REMPLACER_PAR_UUID_CLASSE"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Assign Student to Class (Update)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"classId\": \"REMPLACER_PAR_UUID_CLASSE\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/users/:studentId/assign-class",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "users",
+                                ":studentId",
+                                "assign-class"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "studentId",
+                                    "value": "UUID_ETUDIANT"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "3. Classes",
+            "item": [
+                {
+                    "name": "Create Class",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Classe Terminale S\",\n    \"teacherId\": \"REMPLACER_PAR_UUID_PROF_OU_NULL\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/classes",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "classes"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Class (Assign Teacher)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"teacherId\": \"REMPLACER_PAR_UUID_PROF\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/classes/:id",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "classes",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "UUID_CLASSE"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "4. Subjects",
+            "item": [
+                {
+                    "name": "Create Subject",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Mathématiques Avancées\",\n    \"classId\": \"REMPLACER_PAR_UUID_CLASSE\",\n    \"teacherId\": \"REMPLACER_PAR_UUID_PROF\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/subjects",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "subjects"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "5. Sessions",
+            "item": [
+                {
+                    "name": "Create Session (Teacher Auto-Assign)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"date\": \"2025-01-20T08:30:00.000Z\",\n    \"classId\": \"REMPLACER_PAR_UUID_CLASSE\",\n    \"subjectId\": \"REMPLACER_PAR_UUID_SUJET\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/sessions",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "sessions"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Sessions (Filter by Date & Class)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{url}}/sessions?date=2025-01-20&classId=REMPLACER_PAR_UUID_CLASSE",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "sessions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "date",
+                                    "value": "2025-01-20"
+                                },
+                                {
+                                    "key": "classId",
+                                    "value": "REMPLACER_PAR_UUID_CLASSE"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Session (Change Class/Subject)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"date\": \"2025-01-20T10:00:00.000Z\",\n    \"classId\": \"NOUVELLE_CLASSE_ID\",\n    \"subjectId\": \"NOUVEAU_PROJET_ID\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/sessions/:id",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "sessions",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "UUID_SESSION"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "6. Attendance",
+            "item": [
+                {
+                    "name": "Mark Attendance (Batch)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"records\": [\n        {\n            \"studentId\": \"UUID_ETUDIANT_1\",\n            \"status\": \"PRESENT\"\n        },\n        {\n            \"studentId\": \"UUID_ETUDIANT_2\",\n            \"status\": \"ABSENT\"\n        },\n        {\n            \"studentId\": \"UUID_ETUDIANT_3\",\n            \"status\": \"LATE\"\n        }\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{url}}/sessions/:id/attendance",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "sessions",
+                                ":id",
+                                "attendance"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "UUID_SESSION"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Attendance for Session",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{url}}/sessions/:id/attendance",
+                            "host": [
+                                "{{url}}"
+                            ],
+                            "path": [
+                                "sessions",
+                                ":id",
+                                "attendance"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "UUID_SESSION"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "url",
+            "value": "http://localhost:3000/api"
+        },
+        {
+            "key": "token",
+            "value": ""
+        }
+    ]
+}
