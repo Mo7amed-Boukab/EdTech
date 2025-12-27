@@ -3,6 +3,33 @@ import ApiError from '../utils/ApiError';
 import type { Prisma } from '../generated/prisma/client';
 import { CreateSessionDto, UpdateSessionDto } from '../dtos/session.dto';
 
+
+
+async function checkSessionConflict(date: Date, classId: string, teacherId: string, excludeSessionId?: string) {
+    // We strictly check if there is already a session starting at this EXACT date/time
+    // for either the Class or the Teacher.
+    const conflict = await prisma.session.findFirst({
+        where: {
+            date: date,
+            id: excludeSessionId ? { not: excludeSessionId } : undefined,
+            OR: [
+                { classId: classId },
+                { teacherId: teacherId }
+            ]
+        },
+        include: { class: true, teacher: true }
+    });
+
+    if (conflict) {
+        if (conflict.classId === classId) {
+            throw ApiError.conflict(`Class ${conflict.class.name} already has a session at ${date.toISOString()}`);
+        }
+        if (conflict.teacherId === teacherId) {
+            throw ApiError.conflict(`Teacher ${conflict.teacher.fullName} is already busy at ${date.toISOString()}`);
+        }
+    }
+}
+
 export async function createSession(data: CreateSessionDto) {
     // Verify constraints
     const subject = await prisma.subject.findUnique({ where: { id: data.subjectId } });
@@ -17,6 +44,9 @@ export async function createSession(data: CreateSessionDto) {
     const teacher = await prisma.user.findUnique({ where: { id: data.teacherId } });
     if (!teacher || teacher.role !== 'TEACHER') throw ApiError.badRequest('Invalid teacher ID');
 
+    // CONFLICT CHECK
+    await checkSessionConflict(new Date(data.date), data.classId, data.teacherId!);
+
     return prisma.session.create({
         data: {
             date: new Date(data.date),
@@ -27,7 +57,11 @@ export async function createSession(data: CreateSessionDto) {
     });
 }
 
-export async function getAllSessions(filters?: { classId?: string; teacherId?: string; subjectId?: string; date?: string }) {
+export async function getAllSessions(
+    filters?: { classId?: string; teacherId?: string; subjectId?: string; date?: string },
+    page = 1,
+    limit = 20
+) {
     const where: Prisma.SessionWhereInput = {};
     if (filters?.classId) where.classId = filters.classId;
     if (filters?.teacherId) where.teacherId = filters.teacherId;
@@ -45,16 +79,34 @@ export async function getAllSessions(filters?: { classId?: string; teacherId?: s
         };
     }
 
-    return prisma.session.findMany({
-        where,
-        include: {
-            class: { select: { id: true, name: true } },
-            subject: { select: { id: true, name: true } },
-            teacher: { select: { id: true, fullName: true } }
-        },
-        orderBy: { date: 'asc' }
-    });
+    const skip = (page - 1) * limit;
+
+    const [sessions, total] = await Promise.all([
+        prisma.session.findMany({
+            where,
+            include: {
+                class: { select: { id: true, name: true } },
+                subject: { select: { id: true, name: true } },
+                teacher: { select: { id: true, fullName: true } }
+            },
+            orderBy: { date: 'asc' },
+            skip,
+            take: limit
+        }),
+        prisma.session.count({ where })
+    ]);
+
+    return {
+        data: sessions,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 }
+
 
 export async function updateSession(id: string, data: UpdateSessionDto, requesterId: string) {
     const session = await prisma.session.findUnique({ where: { id } });
@@ -90,6 +142,16 @@ export async function updateSession(id: string, data: UpdateSessionDto, requeste
         if (subject.classId !== targetClassId) {
             throw ApiError.badRequest('Subject does not belong to the class');
         }
+    }
+
+    // CONFLICT CHECK for Update
+    // If date, classId, or teacherId changes (or session's existing ones if not provided)
+    if (data.date || data.classId || data.teacherId) {
+        const checkDate = data.date ? new Date(data.date) : session.date;
+        const checkClassId = data.classId || session.classId;
+        const checkTeacherId = data.teacherId || session.teacherId;
+
+        await checkSessionConflict(checkDate, checkClassId, checkTeacherId, id);
     }
 
     return prisma.session.update({
