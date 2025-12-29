@@ -54,9 +54,11 @@ model User {
   ---------------------- */
 
 model Class {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  level        String?  // 1ère, 2ème, 3ème, etc.
+  academicYear String?  // 2024-2025, 2025-2026, etc.
+  createdAt    DateTime @default(now())
 
   /* ADMIN who created the class */
   createdById String   @db.Uuid

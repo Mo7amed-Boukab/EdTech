@@ -23,9 +23,10 @@ export class ClassController {
 
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const { teacherId, page, limit } = req.query;
+            const { teacherId, level, page, limit } = req.query;
             const filters = {
-                ...(teacherId && { teacherId: String(teacherId) })
+                ...(teacherId && { teacherId: String(teacherId) }),
+                ...(level && { level: String(level) })
             };
 
             const pageNum = Number(page) || 1;

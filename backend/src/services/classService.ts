@@ -25,6 +25,8 @@ export async function createClass(data: CreateClassDto, adminId: string) {
 
     const createData: Prisma.ClassUncheckedCreateInput = {
         name: data.name,
+        level: data.level || null,
+        academicYear: data.academicYear || null,
         createdById: adminId,
         teacherId: data.teacherId || null,
     };
@@ -36,11 +38,15 @@ export async function createClass(data: CreateClassDto, adminId: string) {
     return newClass;
 }
 
-export async function getAllClasses(filters?: { teacherId?: string }, page = 1, limit = 10) {
+export async function getAllClasses(filters?: { teacherId?: string; level?: string }, page = 1, limit = 10) {
     const where: Prisma.ClassWhereInput = {};
 
     if (filters?.teacherId) {
         where.teacherId = filters.teacherId;
+    }
+
+    if (filters?.level) {
+        where.level = filters.level;
     }
 
     const skip = (page - 1) * limit;
@@ -147,6 +153,8 @@ export async function updateClass(id: string, data: UpdateClassDto) {
         where: { id },
         data: {
             ...(data.name && { name: data.name }),
+            ...(data.level !== undefined && { level: data.level }),
+            ...(data.academicYear !== undefined && { academicYear: data.academicYear }),
             ...(data.teacherId && { teacherId: data.teacherId }),
         },
     });
