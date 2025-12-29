@@ -1,7 +1,7 @@
 import { Edit2, Trash2, Users, GraduationCap } from "lucide-react";
 
 interface ClassItem {
-    id: number;
+    id: string;
     name: string;
     level: string;
     studentCount: number;

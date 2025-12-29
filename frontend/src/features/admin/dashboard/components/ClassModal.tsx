@@ -2,19 +2,24 @@ import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { CustomSelect } from '../../../../components/CustomSelect';
 
+interface TeacherOption {
+    id: string;
+    fullName: string;
+}
+
 interface ClassModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (classData: any) => void;
     classItem?: any;
-    teachers?: string[];
+    teachers?: TeacherOption[];
 }
 
-export const ClassModal = ({ isOpen, onClose, onSave, classItem, teachers = ['Jean Dupont', 'Sarah Martin'] }: ClassModalProps) => {
+export const ClassModal = ({ isOpen, onClose, onSave, classItem, teachers = [] }: ClassModalProps) => {
     const [formData, setFormData] = useState({
         name: '',
         level: '',
-        mainTeacher: '',
+        teacherId: '',
         academicYear: '2023-2024'
     });
 
@@ -22,15 +27,15 @@ export const ClassModal = ({ isOpen, onClose, onSave, classItem, teachers = ['Je
         if (classItem) {
             setFormData({
                 name: classItem.name,
-                level: classItem.level,
-                mainTeacher: classItem.mainTeacher || '',
+                level: classItem.level || '',
+                teacherId: classItem.teacher?.id || '',
                 academicYear: classItem.academicYear || '2023-2024'
             });
         } else {
             setFormData({
                 name: '',
                 level: '',
-                mainTeacher: '',
+                teacherId: '',
                 academicYear: '2023-2024'
             });
         }
@@ -71,21 +76,25 @@ export const ClassModal = ({ isOpen, onClose, onSave, classItem, teachers = ['Je
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <CustomSelect
-                                    label="Niveau"
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Niveau</label>
+                                <input
+                                    type="text"
+                                    required
                                     value={formData.level}
-                                    onChange={(val) => setFormData({ ...formData, level: val })}
-                                    options={['Terminale', '1ère', 'Seconde', '3ème']}
-                                    placeholder="Sélectionner..."
+                                    onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none transition-all placeholder:text-gray-300"
+                                    placeholder="ex: Terminale"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Année Scolaire</label>
                                 <input
                                     type="text"
+                                    required
                                     value={formData.academicYear}
                                     onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
                                     className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none transition-all placeholder:text-gray-300"
+                                    placeholder="ex: 2023-2024"
                                 />
                             </div>
                         </div>
@@ -93,9 +102,9 @@ export const ClassModal = ({ isOpen, onClose, onSave, classItem, teachers = ['Je
                         <div>
                             <CustomSelect
                                 label="Professeur Principal"
-                                value={formData.mainTeacher}
-                                onChange={(val) => setFormData({ ...formData, mainTeacher: val })}
-                                options={teachers}
+                                value={formData.teacherId}
+                                onChange={(val) => setFormData({ ...formData, teacherId: val })}
+                                options={teachers.map(t => ({ value: t.id, label: t.fullName }))}
                                 placeholder="Sélectionner un professeur..."
                             />
                         </div>

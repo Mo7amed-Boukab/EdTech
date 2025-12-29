@@ -1,72 +1,71 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Header } from '../../../../components/Header';
 import { SearchInput } from '../../../../components/SearchInput';
+import { CustomSelect } from '../../../../components/CustomSelect';
 import { SubjectsTable } from '../components/SubjectsTable';
 import { SubjectModal } from '../components/SubjectModal';
 import { DeleteConfirmationModal } from '../../../../components/DeleteConfirmationModal';
-
-// Mock Data
-const MOCK_SUBJECTS = [
-    {
-        id: 1,
-        name: "Mathématiques",
-        code: "MATH",
-        coefficient: 7,
-        className: "Terminale S1",
-        teacher: "Jean Dupont",
-        studentCount: 24,
-        description: "Algèbre, Géométrie et Analyse"
-    },
-    {
-        id: 2,
-        name: "Physique-Chimie",
-        code: "PC",
-        coefficient: 6,
-        className: "1ère S2",
-        teacher: "Sarah Martin",
-        studentCount: 28,
-        description: "Sciences physiques et chimiques"
-    },
-    {
-        id: 3,
-        name: "Français",
-        code: "FR",
-        coefficient: 3,
-        className: "Seconde 3",
-        teacher: "Michel Dubois",
-        studentCount: 30,
-        description: "Littérature et langue française"
-    },
-    {
-        id: 4,
-        name: "Anglais",
-        code: "ANG",
-        coefficient: 3,
-        className: "Terminale S1",
-        teacher: "Sophie Richard",
-        studentCount: 24,
-        description: "Langue vivante 1"
-    }
-];
+import { subjectApi } from '../../services/subject.api';
+import { classApi } from '../../services/class.api';
+import { teacherApi } from '../../services/teacher.api';
+import { useDebounce } from '../../../../hooks/useDebounce';
+import type { Subject } from '../../types/subject.types';
+import type { Class } from '../../types/class.types';
 
 export const SubjectsManagement = () => {
     const [searchQuery, setSearchQuery] = useState("");
+    const [classFilter, setClassFilter] = useState("All");
+
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [classes, setClasses] = useState<Class[]>([]);
+    const [teachers, setTeachers] = useState<{ id: string, fullName: string }[]>([]);
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedSubject, setSelectedSubject] = useState<any>(null);
-    const [subjects, setSubjects] = useState(MOCK_SUBJECTS);
 
-    // Filter Logic
-    const filteredSubjects = useMemo(() => {
-        return subjects.filter(sub => {
-            const matchesSearch =
-                sub.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                sub.code.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesSearch;
-        });
-    }, [subjects, searchQuery]);
+    const debouncedSearch = useDebounce(searchQuery, 500);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const filters: any = {
+                limit: 100,
+                ...(debouncedSearch && { search: debouncedSearch }),
+                ...(classFilter !== "All" && { classId: classFilter })
+            };
+
+            // Fetch subjects, classes, and teachers in parallel
+            const [subjectsRes, classesRes, teachersRes] = await Promise.all([
+                subjectApi.getAll(filters),
+                classApi.getAll({ limit: 100 }),
+                teacherApi.getAll({ limit: 100 })
+            ]);
+
+            setSubjects(subjectsRes.data);
+            setClasses(classesRes.data);
+            setTeachers(teachersRes.data.map((t: any) => ({
+                id: t.id,
+                fullName: t.fullName
+            })));
+
+        } catch (err: any) {
+            console.error('Error fetching data:', err);
+            setError(err.response?.data?.message || 'Erreur lors du chargement des données');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [debouncedSearch, classFilter]);
 
     // Handlers
     const handleAddSubject = () => {
@@ -84,31 +83,35 @@ export const SubjectsManagement = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleConfirmDelete = () => {
-        if (selectedSubject) {
-            setSubjects(subjects.filter(s => s.id !== selectedSubject.id));
+    const handleConfirmDelete = async () => {
+        if (!selectedSubject) return;
+        try {
+            await subjectApi.delete(selectedSubject.id);
+            await fetchData();
             setIsDeleteModalOpen(false);
             setSelectedSubject(null);
+        } catch (err: any) {
+            console.error('Error deleting subject:', err);
+            alert('Erreur lors de la suppression');
         }
     };
 
-    const handleSaveSubject = (subjectData: any) => {
-        if (selectedSubject) {
-            setSubjects(subjects.map(s =>
-                s.id === selectedSubject.id
-                    ? { ...s, ...subjectData }
-                    : s
-            ));
-        } else {
-            const newSubject = {
-                id: Math.max(...subjects.map(s => s.id), 0) + 1,
-                ...subjectData,
-                studentCount: 0 // Default for new
-            };
-            setSubjects([...subjects, newSubject]);
+    const handleSaveSubject = async (subjectData: any) => {
+        try {
+            if (selectedSubject) {
+                // Update
+                await subjectApi.update(selectedSubject.id, subjectData);
+            } else {
+                // Create
+                await subjectApi.create(subjectData);
+            }
+            await fetchData();
+            setIsSubjectModalOpen(false);
+            setSelectedSubject(null);
+        } catch (err: any) {
+            console.error('Error saving subject:', err);
+            alert(err.response?.data?.message || 'Erreur lors de l\'enregistrement');
         }
-        setIsSubjectModalOpen(false);
-        setSelectedSubject(null);
     };
 
     return (
@@ -118,7 +121,7 @@ export const SubjectsManagement = () => {
                 description="Configuration des matières enseignées et coefficients"
             />
 
-            <div className="px-6 pb-6 space-y-6 mt-6">
+            <div className="px-4 sm:px-6 pb-6 space-y-6 mt-4 sm:mt-6">
                 <div className="flex flex-col sm:flex-row justify-between gap-4">
                     <div className="flex flex-col sm:flex-row gap-4 flex-1">
                         <div className="w-full sm:w-[420px]">
@@ -126,6 +129,14 @@ export const SubjectsManagement = () => {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Rechercher une matière..."
+                            />
+                        </div>
+                        <div className="w-full sm:w-[200px]">
+                            <CustomSelect
+                                value={classFilter}
+                                onChange={setClassFilter}
+                                options={['All', ...classes.map(c => ({ value: c.id, label: c.name }))]}
+                                placeholder="Filtrer par classe"
                             />
                         </div>
                     </div>
@@ -141,19 +152,35 @@ export const SubjectsManagement = () => {
                     </div>
                 </div>
 
-                <SubjectsTable
-                    subjects={filteredSubjects}
-                    onEdit={handleEditSubject}
-                    onDelete={handleDeleteClick}
-                />
+                {/* Loading State */}
+                {loading && (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-700"></div>
+                    </div>
+                )}
+
+                {/* Error State */}
+                {error && !loading && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        {error}
+                    </div>
+                )}
+
+                {!loading && !error && (
+                    <SubjectsTable
+                        subjects={subjects}
+                        onEdit={handleEditSubject}
+                        onDelete={handleDeleteClick}
+                    />
+                )}
 
                 <SubjectModal
                     isOpen={isSubjectModalOpen}
                     onClose={() => setIsSubjectModalOpen(false)}
                     onSave={handleSaveSubject}
                     subject={selectedSubject}
-                    availableClasses={['Terminale S1', '1ère S2', 'Seconde 3']}
-                    availableTeachers={['Jean Dupont', 'Sarah Martin', 'Michel Dubois', 'Sophie Richard']}
+                    availableClasses={classes.map(c => ({ id: c.id, name: c.name }))}
+                    availableTeachers={teachers}
                 />
 
                 <DeleteConfirmationModal
