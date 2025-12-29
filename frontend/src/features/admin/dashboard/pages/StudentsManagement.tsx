@@ -126,7 +126,7 @@ export const StudentsManagement = () => {
                 title="Gestion des Étudiants"
                 description="Gérez les inscriptions, assignations aux classes et suivi"
             />
-            <div className="px-6 pb-6 space-y-6 mt-6">
+            <div className="px-4 sm:px-6 pb-6 space-y-6 mt-4 sm:mt-6">
                 {/* Actions Bar */}
                 <div className="flex flex-col sm:flex-row justify-between gap-4">
                     <div className="flex flex-col sm:flex-row gap-4 flex-1">
@@ -153,10 +153,10 @@ export const StudentsManagement = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleAddStudent}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-700 text-white rounded hover:bg-teal-800 transition-colors shadow-sm font-medium text-sm"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-700 text-white rounded hover:bg-teal-800 transition-colors shadow-sm font-medium text-sm w-full sm:w-auto"
                         >
                             <Plus size={18} />
-                            <span className="hidden sm:inline">Ajouter un étudiant</span>
+                            <span>Ajouter un étudiant</span>
                         </button>
                     </div>
                 </div>

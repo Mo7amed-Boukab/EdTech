@@ -49,14 +49,14 @@ export const CustomSelect = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded text-sm focus:outline-none flex items-center justify-between text-left transition-all hover:bg-gray-50"
+                className="w-full px-3 py-2 sm:py-2.5 bg-white border border-gray-200 rounded text-sm focus:outline-none flex items-center justify-between text-left transition-all hover:bg-gray-50 min-h-[38px] sm:min-h-[42px]"
             >
                 <span className={!value ? "text-gray-400" : "text-gray-900"}>
                     {selectedLabel}
                 </span>
                 <ChevronDown
                     size={16}
-                    className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    className={`text-gray-400 transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 

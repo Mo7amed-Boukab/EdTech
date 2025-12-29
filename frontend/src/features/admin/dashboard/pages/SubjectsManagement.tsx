@@ -133,10 +133,10 @@ export const SubjectsManagement = () => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleAddSubject}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-700 text-white rounded hover:bg-teal-800 transition-colors shadow-sm font-medium text-sm"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-700 text-white rounded hover:bg-teal-800 transition-colors shadow-sm font-medium text-sm w-full sm:w-auto"
                         >
                             <Plus size={18} />
-                            <span className="hidden sm:inline">Ajouter une matière</span>
+                            <span>Ajouter une matière</span>
                         </button>
                     </div>
                 </div>

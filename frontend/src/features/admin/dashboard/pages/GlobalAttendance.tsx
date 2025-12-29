@@ -139,7 +139,7 @@ export const GlobalAttendance = () => {
                 </div>
 
                 {/* Attendance Table */}
-                <div className="bg-white border border-gray-200 rounded overflow-hidden shadow-sm">
+                <div className="bg-white border border-gray-200 rounded overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 border-b border-gray-100">

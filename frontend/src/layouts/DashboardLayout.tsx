@@ -12,7 +12,9 @@ import {
     ChevronLeft,
     ChevronRight,
     User,
-    Clock
+    Clock,
+    Menu,
+    X
 } from 'lucide-react';
 
 type LucideIcon = React.ComponentType<any>;
@@ -50,6 +52,7 @@ export const DashboardLayout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const getItems = () => {
         switch (user?.role) {
@@ -66,17 +69,36 @@ export const DashboardLayout = () => {
     };
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+    const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
+            {/* Mobile Menu Button */}
+            <button
+                onClick={toggleMobileMenu}
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
+            >
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 bg-black/20 z-40"
+                    onClick={closeMobileMenu}
+                />
+            )}
+
             {/* Sidebar */}
             <aside className={`
                 fixed top-0 left-0 z-50 h-screen bg-white border-r border-gray-200
                 transition-all duration-300 ease-in-out flex flex-col
                 ${isCollapsed ? 'w-20' : 'w-64'}
+                ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 {/* Logo Section */}
-                <div className="h-20 flex items-center justify-between px-6 border-b border-gray-100">
+                <div className="h-16 lg:h-20 flex items-center justify-between px-6 border-b border-gray-100">
                     <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center w-full' : ''}`}>
                         {/* Using the teal color from login page for the logo box */}
                         <div className="w-8 h-8 bg-teal-700 rounded flex items-center justify-center flex-shrink-0">
@@ -107,6 +129,7 @@ export const DashboardLayout = () => {
                                 key={item.path}
                                 to={item.path}
                                 end={item.path === '/admin' || item.path === '/teacher' || item.path === '/student'}
+                                onClick={closeMobileMenu}
                                 className={({ isActive }) => `
                                     flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 group relative
                                     ${isActive
