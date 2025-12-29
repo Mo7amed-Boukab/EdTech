@@ -2,24 +2,25 @@ import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { CustomSelect } from '../../../../components/CustomSelect';
 
+interface ClassOption {
+    id: string;
+    name: string;
+}
+
 interface StudentModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (studentData: any) => void;
     student?: any;
-    availableClasses?: string[];
+    availableClasses?: ClassOption[];
 }
 
-export const StudentModal = ({ isOpen, onClose, onSave, student, availableClasses = ['Terminale S1', '1ère S2', 'Seconde 3', '3ème A'] }: StudentModalProps) => {
+export const StudentModal = ({ isOpen, onClose, onSave, student, availableClasses = [] }: StudentModalProps) => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
         password: '',
-        phone: '',
-        parentName: '',
-        parentPhone: '',
-        class: '',
-        status: 'Active'
+        classId: ''
     });
 
     useEffect(() => {
@@ -28,22 +29,14 @@ export const StudentModal = ({ isOpen, onClose, onSave, student, availableClasse
                 fullName: student.fullName,
                 email: student.email,
                 password: '', // Don't show
-                phone: student.phone || '',
-                parentName: student.parentName || '',
-                parentPhone: student.parentPhone || '',
-                class: student.class || '',
-                status: student.status || 'Active'
+                classId: student.class?.id || ''
             });
         } else {
             setFormData({
                 fullName: '',
                 email: '',
                 password: '',
-                phone: '',
-                parentName: '',
-                parentPhone: '',
-                class: '',
-                status: 'Active'
+                classId: ''
             });
         }
     }, [student, isOpen]);
@@ -114,15 +107,15 @@ export const StudentModal = ({ isOpen, onClose, onSave, student, availableClasse
                         </div>
 
                         {/* Academic Info */}
-                            <div>
-                                <CustomSelect
-                                    label="Classe Assignée"
-                                    value={formData.class}
-                                    onChange={(val) => setFormData({ ...formData, class: val })}
-                                    options={availableClasses}
-                                    placeholder="Sélectionner une classe..."
-                                />
-                            </div>
+                        <div>
+                            <CustomSelect
+                                label="Classe Assignée"
+                                value={formData.classId}
+                                onChange={(val) => setFormData({ ...formData, classId: val })}
+                                options={availableClasses.map(c => ({ value: c.id, label: c.name }))}
+                                placeholder="Sélectionner une classe..."
+                            />
+                        </div>
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3 mt-2 border-t border-gray-50">

@@ -1,14 +1,14 @@
 import { Edit2, Trash2, BookOpen, User, GraduationCap } from "lucide-react";
 
 interface Subject {
-    id: number;
+    id: string;
     name: string;
-    code: string;
-    coefficient: number;
-    description: string;
-    className?: string;
-    teacher?: string;
-    studentCount?: number;
+    class?: {
+        name: string;
+    };
+    teacher?: {
+        fullName: string;
+    };
 }
 
 interface SubjectsTableProps {
@@ -33,7 +33,7 @@ export const SubjectsTable = ({ subjects, onEdit, onDelete }: SubjectsTableProps
                     <tbody className="divide-y divide-gray-200">
                         {subjects.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500 text-sm">
+                                <td colSpan={5} className="px-6 py-12 text-center text-gray-500 text-sm">
                                     Aucune matière trouvée
                                 </td>
                             </tr>
@@ -47,20 +47,19 @@ export const SubjectsTable = ({ subjects, onEdit, onDelete }: SubjectsTableProps
                                             </div>
                                             <div>
                                                 <div className="text-sm font-medium text-gray-900">{subject.name}</div>
-                                                <div className="text-xs text-gray-400">{subject.studentCount || 0} étudiants</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-2 text-sm text-gray-700">
                                             <GraduationCap size={14} className="text-gray-400" />
-                                            {subject.className || "-"}
+                                            {subject.class?.name || "-"}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-2 text-sm text-gray-700">
                                             <User size={14} className="text-gray-400" />
-                                            {subject.teacher || "-"}
+                                            {subject.teacher?.fullName || "-"}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">

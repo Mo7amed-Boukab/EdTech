@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createUser, getAllUsers, assignStudentToClass } from '../services/userService';
+import { createUser, getAllUsers, assignStudentToClass, updateUser, deleteUser } from '../services/userService';
 import ApiError from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import { CreateUserDto, AssignClassDto } from '../dtos/user.dto';
@@ -23,10 +23,11 @@ export class UserController {
 
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const { role, classId, page, limit } = req.query;
+            const { role, classId, search, page, limit } = req.query;
             const filters = {
                 ...(role && { role: String(role) }),
-                ...(classId && { classId: String(classId) })
+                ...(classId && { classId: String(classId) }),
+                ...(search && { search: String(search) })
             };
 
             const pageNum = Number(page) || 1;
@@ -48,6 +49,28 @@ export class UserController {
 
             const updatedStudent = await assignStudentToClass(studentId, classId);
             ApiResponse.success(res, updatedStudent, 'Student assigned to class successfully');
+        } catch (err: any) {
+            next(err instanceof ApiError ? err : ApiError.internal(err.message));
+        }
+    }
+
+    static async update(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { fullName, email, password, classId } = req.body;
+
+            const updatedUser = await updateUser(id, { fullName, email, password, classId });
+            ApiResponse.success(res, updatedUser, 'User updated successfully');
+        } catch (err: any) {
+            next(err instanceof ApiError ? err : ApiError.internal(err.message));
+        }
+    }
+
+    static async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await deleteUser(id);
+            ApiResponse.success(res, null, 'User deleted successfully');
         } catch (err: any) {
             next(err instanceof ApiError ? err : ApiError.internal(err.message));
         }

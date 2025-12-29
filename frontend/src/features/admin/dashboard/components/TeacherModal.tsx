@@ -1,21 +1,34 @@
 import { X, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
+interface ClassOption {
+    id: string;
+    name: string;
+}
+
+interface Teacher {
+    id: string;
+    fullName: string;
+    email: string;
+    phone?: string;
+    assignedClasses?: ClassOption[];
+}
+
 interface TeacherModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (teacherData: any) => void;
-    teacher?: any;
-    availableClasses?: string[]; // List of available classes
+    teacher?: Teacher;
+    availableClasses?: ClassOption[]; // List of available classes
 }
 
-export const TeacherModal = ({ isOpen, onClose, onSave, teacher, availableClasses = ['Terminale S1', '1ère S2', 'Seconde 3', '3ème A'] }: TeacherModalProps) => {
+export const TeacherModal = ({ isOpen, onClose, onSave, teacher, availableClasses = [] }: TeacherModalProps) => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
         phone: '',
         password: '',
-        assignedClasses: [] as string[]
+        assignedClasses: [] as string[] // Store IDs of assigned classes
     });
 
     const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
@@ -27,8 +40,8 @@ export const TeacherModal = ({ isOpen, onClose, onSave, teacher, availableClasse
                 fullName: teacher.fullName,
                 email: teacher.email,
                 phone: teacher.phone || '',
-                password: '', // Don't populate password on edit for security/UX usually, but field exists
-                assignedClasses: teacher.assignedClasses || []
+                password: '', 
+                assignedClasses: teacher.assignedClasses?.map(c => c.id) || []
             });
         } else {
             setFormData({
@@ -52,13 +65,13 @@ export const TeacherModal = ({ isOpen, onClose, onSave, teacher, availableClasse
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const toggleClass = (className: string) => {
+    const toggleClass = (classId: string) => {
         setFormData(prev => {
-            const exists = prev.assignedClasses.includes(className);
+            const exists = prev.assignedClasses.includes(classId);
             if (exists) {
-                return { ...prev, assignedClasses: prev.assignedClasses.filter(c => c !== className) };
+                return { ...prev, assignedClasses: prev.assignedClasses.filter(id => id !== classId) };
             } else {
-                return { ...prev, assignedClasses: [...prev.assignedClasses, className] };
+                return { ...prev, assignedClasses: [...prev.assignedClasses, classId] };
             }
         });
     };
@@ -135,7 +148,7 @@ export const TeacherModal = ({ isOpen, onClose, onSave, teacher, availableClasse
                             >
                                 <span className={formData.assignedClasses.length === 0 ? 'text-gray-400' : 'text-gray-900'}>
                                     {formData.assignedClasses.length > 0
-                                        ? formData.assignedClasses.join(', ')
+                                        ? formData.assignedClasses.map(id => availableClasses.find(c => c.id === id)?.name).filter(Boolean).join(', ')
                                         : 'Sélectionner des classes'}
                                 </span>
                                 <ChevronDown size={16} className="text-gray-400" />
@@ -143,21 +156,25 @@ export const TeacherModal = ({ isOpen, onClose, onSave, teacher, availableClasse
 
                             {isClassDropdownOpen && (
                                 <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg z-10 max-h-48 overflow-y-auto">
-                                    {availableClasses.map((cls) => (
-                                        <div
-                                            key={cls}
-                                            onClick={() => toggleClass(cls)}
-                                            className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.assignedClasses.includes(cls)}
-                                                readOnly
-                                                className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                                            />
-                                            <span className="text-sm text-gray-700">{cls}</span>
-                                        </div>
-                                    ))}
+                                    {availableClasses.length === 0 ? (
+                                        <div className="px-3 py-2 text-sm text-gray-500 italic">Aucune classe disponible</div>
+                                    ) : (
+                                        availableClasses.map((cls) => (
+                                            <div
+                                                key={cls.id}
+                                                onClick={() => toggleClass(cls.id)}
+                                                className="px-3 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.assignedClasses.includes(cls.id)}
+                                                    readOnly
+                                                    className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                                />
+                                                <span className="text-sm text-gray-700">{cls.name}</span>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             )}
                         </div>

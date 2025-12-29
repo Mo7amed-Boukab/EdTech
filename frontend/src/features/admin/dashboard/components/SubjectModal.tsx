@@ -2,43 +2,36 @@ import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { CustomSelect } from '../../../../components/CustomSelect';
 
+
+
 interface SubjectModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (subjectData: any) => void;
     subject?: any;
-    availableClasses?: string[];
-    availableTeachers?: string[];
+    availableClasses?: { id: string, name: string }[];
+    availableTeachers?: { id: string, fullName: string }[];
 }
 
 export const SubjectModal = ({ isOpen, onClose, onSave, subject, availableClasses = [], availableTeachers = [] }: SubjectModalProps) => {
     const [formData, setFormData] = useState({
         name: '',
-        code: '',
-        coefficient: 1,
-        description: '',
-        className: '',
-        teacher: ''
+        classId: '',
+        teacherId: ''
     });
 
     useEffect(() => {
         if (subject) {
             setFormData({
                 name: subject.name,
-                code: subject.code,
-                coefficient: subject.coefficient,
-                description: subject.description || '',
-                className: subject.className || '',
-                teacher: subject.teacher || ''
+                classId: subject.class?.id || '',
+                teacherId: subject.teacher?.id || ''
             });
         } else {
             setFormData({
                 name: '',
-                code: '',
-                coefficient: 1,
-                description: '',
-                className: '',
-                teacher: ''
+                classId: '',
+                teacherId: ''
             });
         }
     }, [subject, isOpen]);
@@ -80,9 +73,9 @@ export const SubjectModal = ({ isOpen, onClose, onSave, subject, availableClasse
                             <div className="col-span-2">
                                 <CustomSelect
                                     label="Classe"
-                                    value={formData.className}
-                                    onChange={(val) => setFormData({ ...formData, className: val })}
-                                    options={availableClasses}
+                                    value={formData.classId}
+                                    onChange={(val) => setFormData({ ...formData, classId: val })}
+                                    options={availableClasses.map(c => ({ value: c.id, label: c.name }))}
                                     placeholder="Sélectionner une classe..."
                                 />
                             </div>
@@ -90,9 +83,9 @@ export const SubjectModal = ({ isOpen, onClose, onSave, subject, availableClasse
                             <div className="col-span-2">
                                 <CustomSelect
                                     label="Enseignant"
-                                    value={formData.teacher}
-                                    onChange={(val) => setFormData({ ...formData, teacher: val })}
-                                    options={availableTeachers}
+                                    value={formData.teacherId}
+                                    onChange={(val) => setFormData({ ...formData, teacherId: val })}
+                                    options={availableTeachers.map(t => ({ value: t.id, label: t.fullName }))}
                                     placeholder="Sélectionner un enseignant..."
                                 />
                             </div>

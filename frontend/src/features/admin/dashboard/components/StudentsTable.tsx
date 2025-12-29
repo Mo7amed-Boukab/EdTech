@@ -1,37 +1,23 @@
 import { Edit2, Trash2, GraduationCap } from "lucide-react";
 
 interface Student {
-    id: number;
+    id: string;
     fullName: string;
     email: string;
-    class: string;
-    status: string;
-    joinDate: string;
-    parentName: string;
-    parentPhone: string;
+    class?: {
+        id: string;
+        name: string;
+    };
+    createdAt: string;
 }
 
 interface StudentsTableProps {
     students: Student[];
     onEdit: (student: Student) => void;
     onDelete: (student: Student) => void;
-    onView?: (student: Student) => void;
 }
 
-export const StudentsTable = ({ students, onEdit, onDelete, onView }: StudentsTableProps) => {
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "Active":
-                return "bg-green-50 text-green-700 border-green-200";
-            case "Inactive":
-                return "bg-gray-50 text-gray-600 border-gray-200";
-            case "Graduated":
-                return "bg-blue-50 text-blue-700 border-blue-200";
-            default:
-                return "bg-gray-50 text-gray-600 border-gray-200";
-        }
-    };
+export const StudentsTable = ({ students, onEdit, onDelete }: StudentsTableProps) => {
 
     return (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -70,14 +56,14 @@ export const StudentsTable = ({ students, onEdit, onDelete, onView }: StudentsTa
                                         {student.class ? (
                                             <div className="flex items-center gap-1.5">
                                                 <GraduationCap size={14} className="text-gray-400" />
-                                                <span className="text-sm text-gray-700 font-medium">{student.class}</span>
+                                                <span className="text-sm text-gray-700 font-medium">{student.class.name}</span>
                                             </div>
                                         ) : (
                                             <span className="text-xs text-gray-400 italic">Non assigné</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-600">{student.joinDate}</div>
+                                        <div className="text-sm text-gray-600">{new Date(student.createdAt).toLocaleDateString()}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end gap-2">

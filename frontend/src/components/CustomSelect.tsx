@@ -61,7 +61,7 @@ export const CustomSelect = ({
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg z-50 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-100 custom-scrollbar">
                     {normalizedOptions.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-gray-400 italic">Aucune option</div>
                     ) : (

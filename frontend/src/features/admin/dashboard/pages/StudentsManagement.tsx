@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { CustomSelect } from '../../../../components/CustomSelect';
 import { Header } from '../../../../components/Header';
@@ -6,74 +6,60 @@ import { SearchInput } from '../../../../components/SearchInput';
 import { StudentsTable } from '../components/StudentsTable';
 import { StudentModal } from '../components/StudentModal';
 import { DeleteConfirmationModal } from '../../../../components/DeleteConfirmationModal';
-
-// Mock Data
-const MOCK_STUDENTS = [
-    {
-        id: 1,
-        fullName: "Lucas Petit",
-        email: "lucas.petit@student.com",
-        class: "Terminale S1",
-        status: "Active",
-        joinDate: "2023-09-01",
-        parentName: "Marie Petit",
-        parentPhone: "06 12 34 56 78"
-    },
-    {
-        id: 2,
-        fullName: "Emma Leroy",
-        email: "emma.leroy@student.com",
-        class: "1ère S2",
-        status: "Active",
-        joinDate: "2023-09-01",
-        parentName: "Paul Leroy",
-        parentPhone: "06 98 76 54 32"
-    },
-    {
-        id: 3,
-        fullName: "Nathan Moreau",
-        email: "nathan.moreau@student.com",
-        class: "Seconde 3",
-        status: "Inactive",
-        joinDate: "2023-11-10",
-        parentName: "Sophie Moreau",
-        parentPhone: "06 11 22 33 44"
-    },
-    {
-        id: 4,
-        fullName: "Chloé Dupont",
-        email: "chloe.dupont@student.com",
-        class: "Terminale S1",
-        status: "Graduated",
-        joinDate: "2022-09-01",
-        parentName: "Jean Dupont",
-        parentPhone: "07 55 66 77 88"
-    }
-];
+import { studentApi } from '../../services/student.api';
+import { classApi } from '../../services/class.api';
+import { useDebounce } from '../../../../hooks/useDebounce';
+import type { Student } from '../../types/student.types';
+import type { Class } from '../../types/class.types';
 
 export const StudentsManagement = () => {
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All");
     const [classFilter, setClassFilter] = useState("All");
+
+    const [students, setStudents] = useState<Student[]>([]);
+    const [allClasses, setAllClasses] = useState<Class[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
-    const [students, setStudents] = useState(MOCK_STUDENTS);
 
-    // Filter Logic
-    const filteredStudents = useMemo(() => {
-        return students.filter(student => {
-            const matchesSearch =
-                student.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                student.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
-            const matchesStatus = statusFilter === "All" || student.status === statusFilter;
-            const matchesClass = classFilter === "All" || student.class === classFilter;
+    // Fetch Data
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-            return matchesSearch && matchesStatus && matchesClass;
-        });
-    }, [students, searchQuery, statusFilter, classFilter]);
+            const filters: any = {
+                limit: 100,
+                ...(debouncedSearch && { search: debouncedSearch })
+            };
+
+            if (classFilter !== "All") {
+                filters.classId = classFilter;
+            }
+
+            const [studentsRes, classesRes] = await Promise.all([
+                studentApi.getAll(filters),
+                classApi.getAll({ limit: 100 })
+            ]);
+
+            setStudents(studentsRes.data);
+            setAllClasses(classesRes.data);
+        } catch (err: any) {
+            console.error('Error fetching data:', err);
+            setError(err.response?.data?.message || 'Erreur lors du chargement des données');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [debouncedSearch, classFilter]);
 
     // Handlers
     const handleAddStudent = () => {
@@ -91,33 +77,44 @@ export const StudentsManagement = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleConfirmDelete = () => {
-        if (selectedStudent) {
-            setStudents(students.filter(s => s.id !== selectedStudent.id));
+    const handleConfirmDelete = async () => {
+        if (!selectedStudent) return;
+        try {
+            await studentApi.delete(selectedStudent.id);
+            await fetchData();
             setIsDeleteModalOpen(false);
             setSelectedStudent(null);
+        } catch (err: any) {
+            console.error('Error deleting student:', err);
         }
     };
 
-    const handleSaveStudent = (studentData: any) => {
-        if (selectedStudent) {
-            // Edit mode
-            setStudents(students.map(s =>
-                s.id === selectedStudent.id
-                    ? { ...s, ...studentData }
-                    : s
-            ));
-        } else {
-            // Add mode
-            const newStudent = {
-                id: Math.max(...students.map(s => s.id), 0) + 1,
-                ...studentData,
-                joinDate: new Date().toLocaleDateString('en-CA'),
-            };
-            setStudents([...students, newStudent]);
+    const handleSaveStudent = async (studentData: any) => {
+        try {
+            if (selectedStudent) {
+                // Update
+                await studentApi.update(selectedStudent.id, {
+                    fullName: studentData.fullName,
+                    email: studentData.email,
+                    password: studentData.password || undefined,
+                    classId: studentData.classId || undefined
+                });
+            } else {
+                // Create
+                await studentApi.create({
+                    fullName: studentData.fullName,
+                    email: studentData.email,
+                    password: studentData.password,
+                    role: 'STUDENT', 
+                    classId: studentData.classId || undefined
+                });
+            }
+            await fetchData();
+            setIsStudentModalOpen(false);
+            setSelectedStudent(null);
+        } catch (err: any) {
+            console.error('Error saving student:', err);
         }
-        setIsStudentModalOpen(false);
-        setSelectedStudent(null);
     };
 
     return (
@@ -143,7 +140,7 @@ export const StudentsManagement = () => {
                             <CustomSelect
                                 value={classFilter}
                                 onChange={setClassFilter}
-                                options={['All', 'Terminale S1', '1ère S2', 'Seconde 3']}
+                                options={['All', ...allClasses.map(c => ({ value: c.id, label: c.name }))]}
                                 placeholder="Toutes les classes"
                             />
                         </div>
@@ -161,18 +158,35 @@ export const StudentsManagement = () => {
                     </div>
                 </div>
 
-                <StudentsTable
-                    students={filteredStudents}
-                    onEdit={handleEditStudent}
-                    onDelete={handleDeleteClick}
-                    onView={(student) => console.log('View', student)}
-                />
+                {/* Loading State */}
+                {loading && (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-700"></div>
+                    </div>
+                )}
+
+                {/* Error State */}
+                {error && !loading && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        {error}
+                    </div>
+                )}
+
+                {!loading && !error && (
+                    <StudentsTable
+                        students={students}
+                        onEdit={handleEditStudent}
+                        onDelete={handleDeleteClick}
+                        onView={(student) => console.log('View', student)}
+                    />
+                )}
 
                 <StudentModal
                     isOpen={isStudentModalOpen}
                     onClose={() => setIsStudentModalOpen(false)}
                     onSave={handleSaveStudent}
                     student={selectedStudent}
+                    availableClasses={allClasses.map(c => ({ id: c.id, name: c.name }))}
                 />
 
                 <DeleteConfirmationModal

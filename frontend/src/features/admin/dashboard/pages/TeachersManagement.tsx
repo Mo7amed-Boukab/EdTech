@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { CustomSelect } from '../../../../components/CustomSelect';
 import { Header } from '../../../../components/Header';
@@ -6,64 +6,83 @@ import { SearchInput } from '../../../../components/SearchInput';
 import { TeachersTable } from '../components/TeachersTable';
 import { TeacherModal } from '../components/TeacherModal';
 import { DeleteConfirmationModal } from '../../../../components/DeleteConfirmationModal';
-
-// Mock Data
-const MOCK_TEACHERS = [
-    {
-        id: 1,
-        fullName: "Jean Dupont",
-        email: "jean.dupont@edtech.com",
-        phone: "06 12 34 56 78",
-        assignedClasses: ["Terminale S1", "1ère S2"],
-        joinDate: "2023-09-01"
-    },
-    {
-        id: 2,
-        fullName: "Sarah Martin",
-        email: "sarah.martin@edtech.com",
-        phone: "07 98 76 54 32",
-        assignedClasses: ["Seconde 3"],
-        joinDate: "2023-09-05"
-    },
-    {
-        id: 3,
-        fullName: "Michel Dubois",
-        email: "michel.dubois@edtech.com",
-        phone: "06 55 44 33 22",
-        assignedClasses: [],
-        joinDate: "2023-11-15"
-    },
-    {
-        id: 4,
-        fullName: "Sophie Richard",
-        email: "sophie.richard@edtech.com",
-        phone: "06 11 22 33 44",
-        assignedClasses: ["Terminale L"],
-        joinDate: "2023-01-20"
-    }
-];
+import { teacherApi } from '../../services/teacher.api';
+import { classApi } from '../../services/class.api';
+import { useDebounce } from '../../../../hooks/useDebounce';
+import type { Class } from '../../types/class.types';
+import type { Teacher } from '../../types/teacher.types';
 
 export const TeachersManagement = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [classFilter, setClassFilter] = useState("All");
 
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [allClasses, setAllClasses] = useState<Class[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
-    const [teachers, setTeachers] = useState(MOCK_TEACHERS);
 
-    // Filter Logic
-    const filteredTeachers = useMemo(() => {
-        return teachers.filter(teacher => {
-            const matchesSearch =
-                teacher.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                teacher.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
-            const matchesClass = classFilter === "All" || teacher.assignedClasses.includes(classFilter);
+    // Fetch Data
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-            return matchesSearch && matchesClass;
+            // Parallel fetch
+            const [teachersRes, classesRes] = await Promise.all([
+                teacherApi.getAll({ limit: 100, search: debouncedSearch }),
+                classApi.getAll({ limit: 100 })
+            ]);
+
+            setTeachers(teachersRes.data);
+            setAllClasses(classesRes.data);
+        } catch (err: any) {
+            console.error('Error fetching data:', err);
+            setError(err.response?.data?.message || 'Erreur lors du chargement des données');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [debouncedSearch]);
+
+    // Prepare table data
+    const tableTeachers = useMemo(() => {
+        let filtered = teachers;
+
+        if (classFilter !== "All") {
+            // Filter by class ID
+            filtered = filtered.filter(t =>
+                allClasses.some(c => c.id === classFilter && c.teacher?.id === t.id)
+            );
+        }
+
+        return filtered.map(t => {
+            // Find assigned classes for this teacher
+            const assigned = allClasses
+                .filter(c => c.teacher?.id === t.id)
+                .map(c => ({ id: c.id, name: c.name }));
+
+            return {
+                id: t.id,
+                fullName: t.fullName,
+                email: t.email,
+                assignedClasses: assigned
+            };
         });
-    }, [teachers, searchQuery, classFilter]);
+    }, [teachers, allClasses, classFilter]);
+
+    // Available classes for filter dropdown
+    const filterClassOptions = useMemo(() => {
+        return ['All', ...allClasses.map(c => ({ value: c.id, label: c.name }))];
+    }, [allClasses]);
 
     // Handlers
     const handleAddTeacher = () => {
@@ -81,33 +100,58 @@ export const TeachersManagement = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleConfirmDelete = () => {
-        if (selectedTeacher) {
-            setTeachers(teachers.filter(t => t.id !== selectedTeacher.id));
+    const handleConfirmDelete = async () => {
+        if (!selectedTeacher) return;
+        try {
+            await teacherApi.delete(selectedTeacher.id);
+            await fetchData();
             setIsDeleteModalOpen(false);
             setSelectedTeacher(null);
+        } catch (err: any) {
+            console.error('Error deleting teacher:', err);
         }
     };
 
-    const handleSaveTeacher = (teacherData: any) => {
-        if (selectedTeacher) {
-            // Edit mode
-            setTeachers(teachers.map(t =>
-                t.id === selectedTeacher.id
-                    ? { ...t, ...teacherData }
-                    : t
-            ));
-        } else {
-            // Add mode
-            const newTeacher = {
-                id: Math.max(...teachers.map(t => t.id), 0) + 1,
-                ...teacherData,
-                joinDate: new Date().toLocaleDateString('en-CA'),
-            };
-            setTeachers([...teachers, newTeacher]);
+    const handleSaveTeacher = async (teacherData: any) => {
+        try {
+            let savedTeacher;
+            if (selectedTeacher) {
+                // Update
+                savedTeacher = await teacherApi.update(selectedTeacher.id, {
+                    fullName: teacherData.fullName,
+                    email: teacherData.email,
+                    password: teacherData.password || undefined // Only send if set
+                });
+            } else {
+                // Create
+                savedTeacher = await teacherApi.create({
+                    fullName: teacherData.fullName,
+                    email: teacherData.email,
+                    password: teacherData.password,
+                    role: 'TEACHER'
+                });
+            }
+
+            // Current assigned classes for this teacher (from allClasses state)
+            const currentClassIds = allClasses
+                .filter(c => c.teacher?.id === savedTeacher.id)
+                .map(c => c.id);
+
+            const newClassIds: string[] = teacherData.assignedClasses;
+
+            // Classes to assign
+            for (const classId of newClassIds) {
+                if (!currentClassIds.includes(classId)) {
+                    await classApi.assignTeacher(classId, savedTeacher.id);
+                }
+            }
+
+            await fetchData();
+            setIsTeacherModalOpen(false);
+            setSelectedTeacher(null);
+        } catch (err: any) {
+            console.error('Error saving teacher:', err);
         }
-        setIsTeacherModalOpen(false);
-        setSelectedTeacher(null);
     };
 
     return (
@@ -116,7 +160,7 @@ export const TeachersManagement = () => {
                 title="Gestion des Enseignants"
                 description="Gérez les comptes enseignants et leurs assignations aux classes"
             />
-            <div className="px-4 sm:px-6 pb-6 space-y-6 mt-4 sm:mt-6"> 
+            <div className="px-4 sm:px-6 pb-6 space-y-6 mt-4 sm:mt-6">
                 {/* Actions Bar */}
                 <div className="flex flex-col sm:flex-row justify-between gap-4">
                     <div className="flex flex-col sm:flex-row gap-4 flex-1">
@@ -133,8 +177,8 @@ export const TeachersManagement = () => {
                             <CustomSelect
                                 value={classFilter}
                                 onChange={setClassFilter}
-                                options={['All', 'Terminale S1', '1ère S2', 'Seconde 3', 'Terminale L']}
-                                placeholder="Toutes les classes"
+                                options={filterClassOptions}
+                                placeholder="Filtrer par classe"
                             />
                         </div>
                     </div>
@@ -150,19 +194,35 @@ export const TeachersManagement = () => {
                     </div>
                 </div>
 
-                <TeachersTable
-                    teachers={filteredTeachers}
-                    onEdit={handleEditTeacher}
-                    onDelete={handleDeleteClick}
-                    onView={(teacher) => console.log('View', teacher)}
-                />
+                {/* Loading State */}
+                {loading && (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-700"></div>
+                    </div>
+                )}
+
+                {/* Error State */}
+                {error && !loading && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        {error}
+                    </div>
+                )}
+
+                {!loading && !error && (
+                    <TeachersTable
+                        teachers={tableTeachers}
+                        onEdit={handleEditTeacher}
+                        onDelete={handleDeleteClick}
+                        onView={(teacher) => console.log('View', teacher)}
+                    />
+                )}
 
                 <TeacherModal
                     isOpen={isTeacherModalOpen}
                     onClose={() => setIsTeacherModalOpen(false)}
                     onSave={handleSaveTeacher}
                     teacher={selectedTeacher}
-                    availableClasses={['Terminale S1', '1ère S2', 'Seconde 3', 'Terminale L']}
+                    availableClasses={allClasses.map(c => ({ id: c.id, name: c.name }))}
                 />
 
                 <DeleteConfirmationModal

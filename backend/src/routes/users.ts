@@ -8,6 +8,8 @@ router.use(authenticateToken);
 
 router.post('/', authorizeRoles(['ADMIN']), UserController.create);
 router.get('/', authorizeRoles(['ADMIN']), UserController.getAll);
+router.put('/:id', authorizeRoles(['ADMIN']), UserController.update);
+router.delete('/:id', authorizeRoles(['ADMIN']), UserController.delete);
 router.put('/:studentId/assign-class', authorizeRoles(['ADMIN']), UserController.assignClass);
 
 export default router;

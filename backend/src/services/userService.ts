@@ -42,7 +42,7 @@ export async function createUser(data: CreateUserDto): Promise<PublicUser> {
     return safeUser;
 }
 
-export async function getAllUsers(filters?: { role?: string; classId?: string }, page = 1, limit = 10) {
+export async function getAllUsers(filters?: { role?: string; classId?: string; search?: string }, page = 1, limit = 10) {
     const where: Prisma.UserWhereInput = {};
     if (filters?.role) {
         if (!isRole(filters.role)) throw ApiError.badRequest('Invalid role filter');
@@ -50,6 +50,12 @@ export async function getAllUsers(filters?: { role?: string; classId?: string },
     }
     if (filters?.classId) {
         where.classId = filters.classId;
+    }
+    if (filters?.search) {
+        where.OR = [
+            { fullName: { contains: filters.search, mode: 'insensitive' } },
+            { email: { contains: filters.search, mode: 'insensitive' } }
+        ];
     }
 
     const skip = (page - 1) * limit;
@@ -104,4 +110,66 @@ export async function assignStudentToClass(studentId: string, classId: string) {
             class: { select: { id: true, name: true } }
         }
     });
+}
+
+export async function updateUser(userId: string, data: Partial<CreateUserDto>) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw ApiError.notFound('User not found');
+
+    // Check email uniqueness if email is being updated
+    if (data.email && data.email !== user.email) {
+        const existing = await prisma.user.findUnique({ where: { email: data.email } });
+        if (existing) throw ApiError.conflict('Email already exists');
+    }
+
+    // Hash password if provided
+    let hashedPassword: string | undefined;
+    if (data.password) {
+        hashedPassword = await bcrypt.hash(data.password, 10);
+    }
+
+    // Validate Class ID if provided
+    if (data.classId) {
+        if (data.role && data.role !== 'STUDENT') {
+            throw ApiError.badRequest('Class assignment is only for students');
+        }
+        const existingClass = await prisma.class.findUnique({ where: { id: data.classId } });
+        if (!existingClass) throw ApiError.badRequest('Invalid Class ID');
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            ...(data.fullName && { fullName: data.fullName }),
+            ...(data.email && { email: data.email }),
+            ...(hashedPassword && { password: hashedPassword }),
+            ...(data.classId !== undefined && { classId: data.classId }),
+        },
+        select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            class: { select: { id: true, name: true } }
+        }
+    });
+
+    return updatedUser;
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw ApiError.notFound('User not found');
+
+    // Prevent deletion of users with dependencies (optional - add checks as needed)
+    // For example, prevent deleting teachers with assigned classes
+    if (user.role === 'TEACHER') {
+        const assignedClasses = await prisma.class.count({ where: { teacherId: userId } });
+        if (assignedClasses > 0) {
+            throw ApiError.badRequest('Cannot delete teacher with assigned classes');
+        }
+    }
+
+    await prisma.user.delete({ where: { id: userId } });
 }

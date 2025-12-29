@@ -1,21 +1,20 @@
 import { Edit2, Trash2, Mail } from "lucide-react";
 
 interface Teacher {
-    id: number;
+    id: string;
     fullName: string;
     email: string;
-    phone: string;
-    assignedClasses: string[];
+    phone?: string;
+    assignedClasses?: { id: string; name: string }[];
 }
 
 interface TeachersTableProps {
     teachers: Teacher[];
     onEdit: (teacher: Teacher) => void;
     onDelete: (teacher: Teacher) => void;
-    onView?: (teacher: Teacher) => void;
 }
 
-export const TeachersTable = ({ teachers, onEdit, onDelete, onView }: TeachersTableProps) => {
+export const TeachersTable = ({ teachers, onEdit, onDelete }: TeachersTableProps) => {
 
     return (
         <div className="bg-white border border-gray-200 rounded overflow-hidden">
@@ -46,7 +45,7 @@ export const TeachersTable = ({ teachers, onEdit, onDelete, onView }: TeachersTa
                                             </div>
                                             <div>
                                                 <div className="text-sm font-medium text-gray-900">{teacher.fullName}</div>
-                                                <div className="text-xs text-gray-400">ID: #{teacher.id}</div>
+                                                <div className="text-xs text-gray-400">ID: ...{teacher.id.toString().slice(-4)}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -56,15 +55,15 @@ export const TeachersTable = ({ teachers, onEdit, onDelete, onView }: TeachersTa
                                                 <Mail size={13} className="text-gray-400" />
                                                 {teacher.email}
                                             </div>
-                                            <div className="text-xs text-gray-400 pl-5">{teacher.phone}</div>
+                                            <div className="text-xs text-gray-400 pl-5">{teacher.phone || '-'}</div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1.5">
                                             {teacher.assignedClasses && teacher.assignedClasses.length > 0 ? (
                                                 teacher.assignedClasses.map((cls, idx) => (
-                                                    <span key={idx} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                                                        {cls}
+                                                    <span key={cls.id || idx} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                                                        {cls.name}
                                                     </span>
                                                 ))
                                             ) : (
