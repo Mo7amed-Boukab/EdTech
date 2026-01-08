@@ -4,6 +4,10 @@ node_modules
 
 /src/generated/prisma
 
+# Build output
+dest
+dist
+
 # Logs
 logs
 *.log

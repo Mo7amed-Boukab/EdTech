@@ -616,6 +616,9 @@ body {
   .action-menu {
     display: none !important;
   }
+  .action-menu-cell {
+    display: none !important;
+  }
   .action-btns-desktop {
     display: flex !important;
   }

@@ -140,10 +140,18 @@ export const TeachersManagement = () => {
 
       const newClassIds: string[] = teacherData.assignedClasses;
 
-      // Classes to assign
+      // Classes to assign (new ones)
       for (const classId of newClassIds) {
         if (!currentClassIds.includes(classId)) {
           await classApi.assignTeacher(classId, savedTeacher.id);
+        }
+      }
+
+      // Classes to unassign (removed ones) - set teacherId to null
+      for (const classId of currentClassIds) {
+        if (!newClassIds.includes(classId)) {
+          // Unassign by setting teacherId to null (empty string in API)
+          await classApi.update(classId, { teacherId: "" });
         }
       }
 

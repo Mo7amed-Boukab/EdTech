@@ -6,7 +6,7 @@ interface ClassItem {
   name: string;
   level: string;
   studentCount: number;
-  mainTeacher: string;
+  teacher: string;
   academicYear: string;
 }
 
@@ -45,21 +45,26 @@ export const ClassesTable = ({
               classes.map((cls) => (
                 <tr key={cls.id}>
                   {/* Mobile Action Menu */}
-                  <ActionMenu
-                    actions={[
-                      {
-                        label: "Edit",
-                        icon: <Edit2 size={16} />,
-                        onClick: () => onEdit(cls),
-                      },
-                      {
-                        label: "Delete",
-                        icon: <Trash2 size={16} />,
-                        onClick: () => onDelete(cls),
-                        variant: "danger",
-                      },
-                    ]}
-                  />
+                  <td
+                    className="action-menu-cell"
+                    style={{ padding: 0, border: 0, width: 0 }}
+                  >
+                    <ActionMenu
+                      actions={[
+                        {
+                          label: "Edit",
+                          icon: <Edit2 size={16} />,
+                          onClick: () => onEdit(cls),
+                        },
+                        {
+                          label: "Delete",
+                          icon: <Trash2 size={16} />,
+                          onClick: () => onDelete(cls),
+                          variant: "danger",
+                        },
+                      ]}
+                    />
+                  </td>
 
                   <td data-label="Class" className="no-label">
                     <div className="flex items-center gap-3">
@@ -78,7 +83,7 @@ export const ClassesTable = ({
                     </span>
                   </td>
                   <td data-label="Teacher" className="hide-tablet">
-                    {cls.mainTeacher || (
+                    {cls.teacher || (
                       <span className="text-[var(--text-muted)]">
                         Not assigned
                       </span>

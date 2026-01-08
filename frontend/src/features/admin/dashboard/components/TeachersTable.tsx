@@ -43,21 +43,26 @@ export const TeachersTable = ({
               teachers.map((teacher) => (
                 <tr key={teacher.id}>
                   {/* Mobile Action Menu */}
-                  <ActionMenu
-                    actions={[
-                      {
-                        label: "Edit",
-                        icon: <Edit2 size={16} />,
-                        onClick: () => onEdit(teacher),
-                      },
-                      {
-                        label: "Delete",
-                        icon: <Trash2 size={16} />,
-                        onClick: () => onDelete(teacher),
-                        variant: "danger",
-                      },
-                    ]}
-                  />
+                  <td
+                    className="action-menu-cell"
+                    style={{ padding: 0, border: 0, width: 0 }}
+                  >
+                    <ActionMenu
+                      actions={[
+                        {
+                          label: "Edit",
+                          icon: <Edit2 size={16} />,
+                          onClick: () => onEdit(teacher),
+                        },
+                        {
+                          label: "Delete",
+                          icon: <Trash2 size={16} />,
+                          onClick: () => onDelete(teacher),
+                          variant: "danger",
+                        },
+                      ]}
+                    />
+                  </td>
 
                   <td data-label="Teacher" className="no-label">
                     <div className="flex items-center gap-3">

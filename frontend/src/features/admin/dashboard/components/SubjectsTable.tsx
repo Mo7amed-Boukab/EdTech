@@ -46,21 +46,26 @@ export const SubjectsTable = ({
               subjects.map((subject) => (
                 <tr key={subject.id}>
                   {/* Mobile Action Menu */}
-                  <ActionMenu
-                    actions={[
-                      {
-                        label: "Edit",
-                        icon: <Edit2 size={16} />,
-                        onClick: () => onEdit(subject),
-                      },
-                      {
-                        label: "Delete",
-                        icon: <Trash2 size={16} />,
-                        onClick: () => onDelete(subject),
-                        variant: "danger",
-                      },
-                    ]}
-                  />
+                  <td
+                    className="action-menu-cell"
+                    style={{ padding: 0, border: 0, width: 0 }}
+                  >
+                    <ActionMenu
+                      actions={[
+                        {
+                          label: "Edit",
+                          icon: <Edit2 size={16} />,
+                          onClick: () => onEdit(subject),
+                        },
+                        {
+                          label: "Delete",
+                          icon: <Trash2 size={16} />,
+                          onClick: () => onDelete(subject),
+                          variant: "danger",
+                        },
+                      ]}
+                    />
+                  </td>
 
                   <td data-label="Subject" className="no-label">
                     <div className="flex items-center gap-3">

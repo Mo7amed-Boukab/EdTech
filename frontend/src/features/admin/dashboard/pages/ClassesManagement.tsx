@@ -125,7 +125,7 @@ export const ClassesManagement = () => {
     name: cls.name,
     level: cls.level || "-",
     studentCount: cls._count?.students || 0,
-    mainTeacher: cls.teacher?.fullName || "-",
+    teacher: cls.teacher?.fullName || "-",
     academicYear: cls.academicYear || "-",
   }));
 

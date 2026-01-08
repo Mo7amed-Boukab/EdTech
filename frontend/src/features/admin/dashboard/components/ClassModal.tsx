@@ -20,8 +20,8 @@ export const ClassModal = ({
   const [formData, setFormData] = useState({
     name: "",
     level: "",
-    year: "",
-    mainTeacherId: "",
+    academicYear: "",
+    teacherId: "",
   });
 
   useEffect(() => {
@@ -29,15 +29,15 @@ export const ClassModal = ({
       setFormData({
         name: classItem.name || "",
         level: classItem.level || "",
-        year: classItem.year || "",
-        mainTeacherId: classItem.mainTeacher?.id || "",
+        academicYear: classItem.academicYear || "",
+        teacherId: classItem.teacher?.id || "",
       });
     } else {
       setFormData({
         name: "",
         level: "",
-        year: "",
-        mainTeacherId: "",
+        academicYear: "",
+        teacherId: "",
       });
     }
   }, [classItem, isOpen]);
@@ -100,9 +100,9 @@ export const ClassModal = ({
               <label className="form-label">Academic Year</label>
               <input
                 type="text"
-                value={formData.year}
+                value={formData.academicYear}
                 onChange={(e) =>
-                  setFormData({ ...formData, year: e.target.value })
+                  setFormData({ ...formData, academicYear: e.target.value })
                 }
                 className="form-input"
                 placeholder="e.g. 2025-2026"
@@ -112,10 +112,8 @@ export const ClassModal = ({
             <div className="form-group">
               <CustomSelect
                 label="Main Teacher"
-                value={formData.mainTeacherId}
-                onChange={(val) =>
-                  setFormData({ ...formData, mainTeacherId: val })
-                }
+                value={formData.teacherId}
+                onChange={(val) => setFormData({ ...formData, teacherId: val })}
                 options={teachers.map((t) => ({
                   value: t.id,
                   label: t.fullName,
