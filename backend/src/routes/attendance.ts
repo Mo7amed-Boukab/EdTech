@@ -9,6 +9,12 @@ router.use(authenticateToken);
 // Teacher gets their sessions with attendance overview
 router.get('/my-sessions', authorizeRoles(['TEACHER', 'ADMIN']), AttendanceController.getTeacherAttendance);
 
+// Student gets their attendance history
+router.get('/student/history', authorizeRoles(['STUDENT']), AttendanceController.getStudentAttendanceRecords);
+
+// Student gets their weekly sessions
+router.get('/student/sessions', authorizeRoles(['STUDENT']), AttendanceController.getStudentWeeklySessions);
+
 // Get attendance for a specific session
 router.get('/:sessionId', authorizeRoles(['ADMIN', 'TEACHER']), AttendanceController.getSessionAttendance);
 

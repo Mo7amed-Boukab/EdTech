@@ -1,103 +1,38 @@
-import { useState } from "react";
-import { Check, X, Clock, Search, Calendar, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, X, Clock, Search, Calendar, FileText, Loader2 } from "lucide-react";
 import { CustomSelect } from "../../../../components/CustomSelect";
-
-// Mock Data - Student's attendance history
-const MOCK_ATTENDANCE = [
-  {
-    id: 1,
-    date: "2026-01-05",
-    time: "08:00 – 10:00",
-    subject: "Mathématiques",
-    teacher: "M. Dupont",
-    room: "Salle 204",
-    status: "PRESENT",
-    justified: null,
-  },
-  {
-    id: 2,
-    date: "2026-01-05",
-    time: "10:15 – 12:00",
-    subject: "Physique-Chimie",
-    teacher: "Mme. Curie",
-    room: "Lab 2",
-    status: "PRESENT",
-    justified: null,
-  },
-  {
-    id: 3,
-    date: "2026-01-04",
-    time: "08:00 – 10:00",
-    subject: "Histoire-Géo",
-    teacher: "M. Bloch",
-    room: "Salle 305",
-    status: "ABSENT",
-    justified: true,
-  },
-  {
-    id: 4,
-    date: "2026-01-04",
-    time: "14:00 – 15:30",
-    subject: "Anglais",
-    teacher: "Mrs. Smith",
-    room: "Salle 102",
-    status: "LATE",
-    justified: null,
-  },
-  {
-    id: 5,
-    date: "2026-01-03",
-    time: "08:00 – 10:00",
-    subject: "Philosophie",
-    teacher: "M. Sartre",
-    room: "Salle 101",
-    status: "PRESENT",
-    justified: null,
-  },
-  {
-    id: 6,
-    date: "2026-01-03",
-    time: "10:15 – 12:00",
-    subject: "Mathématiques",
-    teacher: "M. Dupont",
-    room: "Salle 204",
-    status: "ABSENT",
-    justified: false,
-  },
-  {
-    id: 7,
-    date: "2026-01-02",
-    time: "14:00 – 16:00",
-    subject: "Informatique",
-    teacher: "M. Turing",
-    room: "Salle Info",
-    status: "PRESENT",
-    justified: null,
-  },
-  {
-    id: 8,
-    date: "2026-01-02",
-    time: "08:00 – 10:00",
-    subject: "Physique-Chimie",
-    teacher: "Mme. Curie",
-    room: "Lab 2",
-    status: "LATE",
-    justified: null,
-  },
-];
-
-// Extract unique values for filters
-const SUBJECTS = [...new Set(MOCK_ATTENDANCE.map((a) => a.subject))];
-const STATUSES = ["All", "PRESENT", "ABSENT", "LATE"];
+import { studentService, type StudentAttendanceRecord } from "../../services/studentService";
 
 export const StudentAttendance = () => {
+  const [records, setRecords] = useState<StudentAttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
 
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        setLoading(true);
+        const data = await studentService.getAttendanceHistory();
+        setRecords(data);
+      } catch (error) {
+        console.error("Failed to fetch attendance history", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAttendance();
+  }, []);
+
+  // Extract unique values for filters
+  const SUBJECTS = [...new Set(records.map((a) => a.subject))];
+  const STATUSES = ["All", "PRESENT", "ABSENT", "LATE"];
+
   // Filter attendance records
-  const filteredRecords = MOCK_ATTENDANCE.filter((record) => {
+  const filteredRecords = records.filter((record) => {
     if (
       searchQuery &&
       !record.subject.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -122,7 +57,7 @@ export const StudentAttendance = () => {
     }
     acc[record.date].push(record);
     return acc;
-  }, {} as Record<string, typeof MOCK_ATTENDANCE>);
+  }, {} as Record<string, StudentAttendanceRecord[]>);
 
   // Count totals
   const totalPresent = filteredRecords.filter(
@@ -149,6 +84,14 @@ export const StudentAttendance = () => {
       year: "numeric",
     });
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-[var(--primary)]" size={48} />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn">
@@ -290,11 +233,11 @@ export const StudentAttendance = () => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th className="w-[180px]">Date</th>
-                  <th className="w-[130px]">Time</th>
-                  <th>Subject</th>
-                  <th>Teacher</th>
-                  <th>Room</th>
+                  <th className="min-w-[220px]">Date</th>
+                  <th className="min-w-[140px]">Time</th>
+                  <th className="w-[18%]">Subject</th>
+                  <th className="w-[18%]">Teacher</th>
+                  <th className="w-[18%]">Room</th>
                   <th className="text-center w-[150px]">Status</th>
                 </tr>
               </thead>
@@ -350,28 +293,29 @@ export const StudentAttendance = () => {
                         <td className="text-center">
                           <div className="flex flex-col items-center gap-1">
                             <span
-                              className={`status-badge ${
-                                record.status === "PRESENT"
-                                  ? "success"
-                                  : record.status === "ABSENT"
+                              className={`status-badge ${record.status === "PRESENT"
+                                ? "success"
+                                : record.status === "ABSENT"
                                   ? "danger"
-                                  : "warning"
-                              }`}
+                                  : record.status === "LATE"
+                                    ? "warning"
+                                    : "neutral" // Handle null/upcoming
+                                }`}
                             >
                               {record.status === "PRESENT" && (
                                 <Check size={12} />
                               )}
                               {record.status === "ABSENT" && <X size={12} />}
                               {record.status === "LATE" && <Clock size={12} />}
-                              {record.status}
+                              {/* If null/upcoming, show - or Pending */}
+                              {!record.status ? "Pending" : record.status}
                             </span>
                             {record.justified !== null && (
                               <span
-                                className={`text-xs ${
-                                  record.justified
-                                    ? "text-[var(--success)]"
-                                    : "text-[var(--danger)]"
-                                }`}
+                                className={`text-xs ${record.justified
+                                  ? "text-[var(--success)]"
+                                  : "text-[var(--danger)]"
+                                  }`}
                               >
                                 {record.justified
                                   ? "(Justified)"

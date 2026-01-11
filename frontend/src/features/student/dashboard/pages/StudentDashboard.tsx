@@ -1,19 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   Check,
   X,
   Clock,
-  BookOpen,
-  Calendar,
-  GraduationCap,
-  Users,
+  Loader2,
 } from "lucide-react";
+import { studentService, type StudentDashboardStats } from "../../services/studentService";
 
 // Types for absence data
 interface AbsenceRecord {
-  id: number;
+  id: string; // Changed to string to match backend
   subject: string;
   justified: boolean;
 }
@@ -26,6 +24,24 @@ interface DayAbsences {
 export const StudentOverview = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<DayAbsences | null>(null);
+
+  const [stats, setStats] = useState<StudentDashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await studentService.getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to fetch student dashboard stats", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Calendar helpers
   const getDaysInMonth = (date: Date) => {
@@ -57,39 +73,29 @@ export const StudentOverview = () => {
     setSelectedDay(null);
   };
 
-  // Sample attendance data for pie chart
-  const attendanceData = {
-    present: 145,
-    absent: 8,
-    late: 5,
-    total: 158,
-  };
+  if (loading || !stats) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-[var(--primary)]" size={48} />
+      </div>
+    );
+  }
+
+  // Use fetched data
+  const { attendanceData, absenceData, todaySchedule } = stats;
 
   // Calculate percentages for pie chart
-  const presentPercent = (attendanceData.present / attendanceData.total) * 100;
-  const absentPercent = (attendanceData.absent / attendanceData.total) * 100;
-  const latePercent = (attendanceData.late / attendanceData.total) * 100;
+  // Prevent division by zero
+  const totalForCalc = attendanceData.total || 1;
+  const presentPercent = (attendanceData.present / totalForCalc) * 100;
+  const absentPercent = (attendanceData.absent / totalForCalc) * 100;
+  const latePercent = (attendanceData.late / totalForCalc) * 100;
 
   // SVG arc calculation for pie chart
   const circumference = 2 * Math.PI * 40;
   const presentArc = (presentPercent / 100) * circumference;
   const absentArc = (absentPercent / 100) * circumference;
   const lateArc = (latePercent / 100) * circumference;
-
-  // Sample absence data for calendar
-  const absenceData: Record<number, AbsenceRecord[]> = {
-    3: [{ id: 1, subject: "Mathématiques", justified: true }],
-    8: [{ id: 2, subject: "Physique", justified: false }],
-    12: [
-      { id: 3, subject: "Histoire-Géo", justified: true },
-      { id: 4, subject: "Anglais", justified: true },
-    ],
-    18: [{ id: 5, subject: "Philosophie", justified: false }],
-    25: [
-      { id: 6, subject: "Mathématiques", justified: false },
-      { id: 7, subject: "Physique", justified: true },
-    ],
-  };
 
   // Get absence status for a day
   const getAbsenceStatus = (
@@ -114,14 +120,6 @@ export const StudentOverview = () => {
     } else {
       setSelectedDay(null);
     }
-  };
-
-  // Student stats
-  const studentStats = {
-    attendanceRate: "92%",
-    totalSessions: 158,
-    upcomingExams: 3,
-    averageGrade: "14.5/20",
   };
 
   return (
@@ -319,31 +317,26 @@ export const StudentOverview = () => {
                       onClick={() => handleDayClick(day)}
                       className={`
                                                 relative py-2 text-sm font-medium transition-colors
-                                                ${
-                                                  status === "justified"
-                                                    ? "bg-green-600/20 text-green-600"
-                                                    : ""
-                                                }
-                                                ${
-                                                  status === "unjustified"
-                                                    ? "bg-red-600/20 text-red-600"
-                                                    : ""
-                                                }
-                                                ${
-                                                  status === "mixed"
-                                                    ? "bg-orange-500/20 text-orange-500"
-                                                    : ""
-                                                }
-                                                ${
-                                                  !status
-                                                    ? "text-gray-500 hover:bg-gray-100"
-                                                    : ""
-                                                }
-                                                ${
-                                                  isSelected
-                                                    ? "ring-2 ring-[#c41e3a]"
-                                                    : ""
-                                                }
+                                                ${status === "justified"
+                          ? "bg-green-600/20 text-green-600"
+                          : ""
+                        }
+                                                ${status === "unjustified"
+                          ? "bg-red-600/20 text-red-600"
+                          : ""
+                        }
+                                                ${status === "mixed"
+                          ? "bg-orange-500/20 text-orange-500"
+                          : ""
+                        }
+                                                ${!status
+                          ? "text-gray-500 hover:bg-gray-100"
+                          : ""
+                        }
+                                                ${isSelected
+                          ? "ring-2 ring-[#c41e3a]"
+                          : ""
+                        }
                                             `}
                     >
                       {day}
@@ -351,21 +344,18 @@ export const StudentOverview = () => {
                         <span
                           className={`
                                                     absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1
-                                                    ${
-                                                      status === "justified"
-                                                        ? "bg-green-600"
-                                                        : ""
-                                                    }
-                                                    ${
-                                                      status === "unjustified"
-                                                        ? "bg-red-600"
-                                                        : ""
-                                                    }
-                                                    ${
-                                                      status === "mixed"
-                                                        ? "bg-orange-500"
-                                                        : ""
-                                                    }
+                                                    ${status === "justified"
+                              ? "bg-green-600"
+                              : ""
+                            }
+                                                    ${status === "unjustified"
+                              ? "bg-red-600"
+                              : ""
+                            }
+                                                    ${status === "mixed"
+                              ? "bg-orange-500"
+                              : ""
+                            }
                                                 `}
                         ></span>
                       )}
@@ -404,11 +394,10 @@ export const StudentOverview = () => {
                       >
                         <span className="text-gray-500">{record.subject}</span>
                         <span
-                          className={`text-xs font-medium px-2 py-0.5 ${
-                            record.justified
+                          className={`text-xs font-medium px-2 py-0.5 ${record.justified
                               ? "bg-green-600/10 text-green-600"
                               : "bg-red-600/10 text-red-600"
-                          }`}
+                            }`}
                         >
                           {record.justified ? "Justified" : "Unjustified"}
                         </span>
@@ -429,69 +418,45 @@ export const StudentOverview = () => {
             </h2>
           </div>
           <div className="p-0">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Subject</th>
-                  <th>Teacher</th>
-                  <th>Room</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  {
-                    time: "08:00 - 10:00",
-                    subject: "Mathématiques",
-                    teacher: "M. Dupont",
-                    room: "Salle 204",
-                    status: "Completed",
-                  },
-                  {
-                    time: "10:15 - 12:00",
-                    subject: "Physique-Chimie",
-                    teacher: "Mme. Curie",
-                    room: "Lab 2",
-                    status: "In Progress",
-                  },
-                  {
-                    time: "14:00 - 15:30",
-                    subject: "Histoire-Géo",
-                    teacher: "M. Bloch",
-                    room: "Salle 305",
-                    status: "Upcoming",
-                  },
-                  {
-                    time: "15:45 - 17:30",
-                    subject: "Anglais",
-                    teacher: "Mrs. Smith",
-                    room: "Salle 102",
-                    status: "Upcoming",
-                  },
-                ].map((item, i) => (
-                  <tr key={i}>
-                    <td className="font-medium text-gray-800">{item.time}</td>
-                    <td className="text-gray-500">{item.subject}</td>
-                    <td className="text-gray-500">{item.teacher}</td>
-                    <td className="text-gray-500">{item.room}</td>
-                    <td>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                          item.status === "Completed"
-                            ? "bg-green-100 text-green-700"
-                            : item.status === "In Progress"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
+            {todaySchedule.length === 0 ? (
+              <div className="p-8 text-center text-[var(--text-muted)]">
+                No classes scheduled for today.
+              </div>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                    <th>Room</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {todaySchedule.map((item, i) => (
+                    <tr key={i}>
+                      <td className="font-medium text-gray-800">{item.time}</td>
+                      <td className="text-gray-500">{item.subject}</td>
+                      <td className="text-gray-500">{item.teacher}</td>
+                      <td className="text-gray-500">{item.room}</td>
+                      <td>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${item.status === "Completed"
+                              ? "bg-green-100 text-green-700"
+                              : item.status === "In Progress"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>

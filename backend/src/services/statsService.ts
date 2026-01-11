@@ -112,3 +112,111 @@ export async function getTeacherStats(teacherId: string) {
         pendingAttendance
     };
 }
+
+export async function getStudentDashboardStats(studentId: string) {
+    // 1. Get Student Class & Data
+    const student = await prisma.user.findUnique({
+        where: { id: studentId },
+        select: { classId: true }
+    });
+
+    if (!student || !student.classId) {
+        return {
+            attendanceData: { present: 0, absent: 0, late: 0, total: 0 },
+            absenceData: {},
+            todaySchedule: []
+        };
+    }
+
+    // 2. Get All Sessions & Attendance for Stats
+    const allSessions = await prisma.session.findMany({
+        where: { classId: student.classId },
+        include: {
+            attendances: { where: { studentId } },
+            subject: true
+        }
+    });
+
+    let present = 0;
+    let absent = 0;
+    let late = 0;
+    const absenceData: Record<number, { id: string, subject: string, justified: boolean }[]> = {};
+
+    allSessions.forEach(session => {
+        const att = session.attendances[0];
+        if (att) {
+            if (att.status === 'PRESENT') present++;
+            else if (att.status === 'ABSENT') {
+                absent++;
+                // Add to calendar data
+                const date = new Date(session.date);
+                const day = date.getDate(); // 1-31
+
+                if (!absenceData[day]) absenceData[day] = [];
+                absenceData[day].push({
+                    id: session.id, // using session id as record id
+                    subject: session.subject.name,
+                    justified: att.justification === 'JUSTIFIED'
+                });
+            }
+            else if (att.status === 'LATE') late++;
+        }
+    });
+
+    // 3. Get Today's Schedule
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+    const todaySessions = await prisma.session.findMany({
+        where: {
+            classId: student.classId,
+            date: { gte: startOfDay, lt: endOfDay }
+        },
+        include: {
+            subject: true,
+            teacher: true,
+            attendances: { where: { studentId } }
+        },
+        orderBy: { startTime: 'asc' }
+    });
+
+    const todaySchedule = todaySessions.map(session => {
+        const att = session.attendances[0];
+        let status = "Upcoming";
+
+        // Logic for status
+        if (att) {
+            status = "Completed"; // Attendance marked
+        } else {
+            // Basic time check (assuming HH:MM format)
+            const currentHM = now.getHours() * 60 + now.getMinutes();
+            const [startH, startM] = session.startTime.split(':').map(Number);
+            const [endH, endM] = session.endTime.split(':').map(Number);
+            const startTotal = startH * 60 + startM;
+            const endTotal = endH * 60 + endM;
+
+            if (currentHM > endTotal) status = "Completed"; // Unmarked but past
+            else if (currentHM >= startTotal) status = "In Progress";
+        }
+
+        return {
+            time: `${session.startTime} - ${session.endTime}`,
+            subject: session.subject.name,
+            teacher: session.teacher.fullName,
+            room: session.room,
+            status
+        };
+    });
+
+    return {
+        attendanceData: {
+            present,
+            absent,
+            late,
+            total: present + absent + late // Total marked sessions
+        },
+        absenceData, // { day: [records] }
+        todaySchedule
+    };
+}

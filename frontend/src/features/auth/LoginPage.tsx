@@ -162,7 +162,7 @@ export const LoginPage = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 max-md:py-2 mt-2 bg-[#c41e3a] hover:bg-[#a01830] text-white text-[13px] font-semibold uppercase tracking-wider rounded-sm disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2.5 max-md:py-2 mt-2 bg-red-800 hover:bg-[#800000] text-white text-[13px] font-semibold uppercase tracking-wider rounded-sm disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? <span>CONNEXION...</span> : <span>SE CONNECTER</span>}
           </button>

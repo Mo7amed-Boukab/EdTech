@@ -174,3 +174,85 @@ export async function updateAttendanceJustification(
         data: { justification: justification as Justification }
     });
 }
+
+export async function getStudentAttendanceHistory(studentId: string) {
+    // 1. Get Student's Class ID
+    const student = await prisma.user.findUnique({
+        where: { id: studentId },
+        select: { classId: true }
+    });
+
+    if (!student || !student.classId) {
+        return [];
+    }
+
+    // 2. Get all sessions for this class, ordered by date desc
+    const sessions = await prisma.session.findMany({
+        where: { classId: student.classId },
+        include: {
+            subject: true,
+            teacher: true,
+            attendances: {
+                where: { studentId }
+            }
+        },
+        orderBy: [{ date: 'desc' }, { startTime: 'desc' }]
+    });
+
+    // 3. Map to DTO
+    return sessions.map(session => {
+        const attendance = session.attendances[0]; // Specific to this student
+
+        let justification: boolean | null = null;
+        if (attendance?.justification === 'JUSTIFIED') justification = true;
+        if (attendance?.justification === 'NOT_JUSTIFIED') justification = false;
+
+        return {
+            id: session.id,
+            date: session.date.toISOString().split('T')[0], // YYYY-MM-DD
+            time: `${session.startTime} – ${session.endTime}`,
+            subject: session.subject.name,
+            teacher: session.teacher.fullName,
+            room: session.room,
+            status: attendance?.status || null,
+            justified: justification
+        };
+    });
+}
+
+export async function getStudentWeeklySessions(studentId: string, startDate: Date, endDate: Date) {
+    const student = await prisma.user.findUnique({
+        where: { id: studentId },
+        select: { classId: true }
+    });
+
+    if (!student || !student.classId) {
+        return [];
+    }
+
+    const sessions = await prisma.session.findMany({
+        where: {
+            classId: student.classId,
+            date: {
+                gte: startDate,
+                lte: endDate
+            }
+        },
+        include: {
+            subject: true,
+            teacher: true
+        },
+        orderBy: { date: 'asc' }
+    });
+
+    return sessions.map(session => ({
+        id: session.id,
+        date: session.date,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        subject: session.subject.name,
+        teacher: session.teacher.fullName,
+        room: session.room,
+        class: session.classId // or fetch class name if needed, but not used in UI
+    }));
+}

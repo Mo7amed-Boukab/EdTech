@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { markAttendance, getSessionAttendance, updateAttendanceJustification, getTeacherSessionsAttendance } from '../services/attendanceService';
+import { markAttendance, getSessionAttendance, updateAttendanceJustification, getTeacherSessionsAttendance, getStudentAttendanceHistory, getStudentWeeklySessions } from '../services/attendanceService';
 import { ApiResponse } from '../utils/ApiResponse';
 import ApiError from '../utils/ApiError';
 
@@ -69,6 +69,36 @@ export class AttendanceController {
 
             const updated = await updateAttendanceJustification(id, justification, role, userId);
             ApiResponse.success(res, updated, 'Justification updated successfully');
+        } catch (err: any) {
+            next(err instanceof ApiError ? err : ApiError.internal(err.message));
+        }
+    }
+
+    /**
+     * Get student's attendance history
+     * GET /attendance/student/history
+     */
+    static async getStudentAttendanceRecords(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { userId } = req.user!;
+            const history = await getStudentAttendanceHistory(userId);
+            ApiResponse.success(res, history, 'Student attendance history retrieved');
+        } catch (err: any) {
+            next(err instanceof ApiError ? err : ApiError.internal(err.message));
+        }
+    }
+
+    static async getStudentWeeklySessions(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { userId } = req.user!;
+            const { startDate, endDate } = req.query;
+
+            if (!startDate || !endDate) {
+                throw ApiError.badRequest("Start date and end date are required");
+            }
+
+            const sessions = await getStudentWeeklySessions(userId, new Date(startDate as string), new Date(endDate as string));
+            ApiResponse.success(res, sessions, 'Student weekly sessions retrieved');
         } catch (err: any) {
             next(err instanceof ApiError ? err : ApiError.internal(err.message));
         }
