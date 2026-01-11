@@ -6,7 +6,7 @@ const router = Router();
 
 router.use(authenticateToken);
 
-router.post('/', authorizeRoles(['ADMIN']), SubjectController.create);
+router.post('/', authorizeRoles(['ADMIN', 'TEACHER']), SubjectController.create);
 router.get('/', SubjectController.getAll);
 router.get('/:id', SubjectController.getOne);
 router.put('/:id', authorizeRoles(['ADMIN', 'TEACHER']), SubjectController.update);

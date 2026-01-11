@@ -1,4 +1,4 @@
-import { Edit2, Trash2, BookOpen, User, GraduationCap } from "lucide-react";
+import { Edit2, Trash2, Book, User, GraduationCap } from "lucide-react";
 import { ActionMenu } from "../../../../components/ActionMenu";
 
 interface Subject {
@@ -69,8 +69,8 @@ export const SubjectsTable = ({
 
                   <td data-label="Subject" className="no-label">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-[#c41e3a] text-white flex items-center justify-center flex-shrink-0">
-                        <BookOpen size={15} strokeWidth={2} />
+                      <div className="w-8 h-8 rounded bg-red-50 text-red-700 flex items-center justify-center flex-shrink-0">
+                        <Book size={15} strokeWidth={2} />
                       </div>
                       <div className="cell-name truncate">{subject.name}</div>
                     </div>

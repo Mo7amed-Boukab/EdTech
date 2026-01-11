@@ -12,7 +12,6 @@ import {
   ChevronDown,
   Clock,
   Menu,
-  X,
   FileText,
   Calendar,
 } from "lucide-react";
@@ -89,10 +88,22 @@ const teacherItems: SidebarItem[] = [
     children: [{ name: "My Classes", path: "/teacher/classes" }],
   },
   {
+    name: "Subjects",
+    path: "/teacher/subjects",
+    icon: BookOpen,
+    children: [{ name: "My Subjects", path: "/teacher/subjects" }],
+  },
+  {
     name: "Sessions",
     path: "/teacher/sessions",
     icon: Clock,
     children: [{ name: "Session List", path: "/teacher/sessions" }],
+  },
+  {
+    name: "Students",
+    path: "/teacher/students",
+    icon: Users,
+    children: [{ name: "My Students", path: "/teacher/students" }],
   },
 ];
 
@@ -267,11 +278,10 @@ export const DashboardLayout = () => {
                         {/* Parent Item */}
                         <button
                           onClick={() => toggleExpand(item.name)}
-                          className={`flex items-center gap-3 w-full py-2.5 px-5 text-[#8a8f95] text-xs font-medium uppercase tracking-wide cursor-pointer border-l-[3px] border-transparent transition-all duration-100 hover:bg-[#25292e] hover:text-white ${
-                            isActive
+                          className={`flex items-center gap-3 w-full py-2.5 px-5 text-[#8a8f95] text-xs font-medium uppercase tracking-wide cursor-pointer border-l-[3px] border-transparent transition-all duration-100 hover:bg-[#25292e] hover:text-white ${isActive
                               ? "bg-[#25292e] text-white border-l-[#c41e3a]"
                               : ""
-                          }`}
+                            }`}
                         >
                           <Icon size={18} className="opacity-70" />
                           <span className="flex-1 text-left">{item.name}</span>
@@ -290,10 +300,9 @@ export const DashboardLayout = () => {
                                 key={child.path}
                                 to={child.path}
                                 className={({ isActive }) =>
-                                  `block py-2.5 pr-4 pl-12 text-[#8a8f95] text-[13px] border-l-[3px] border-transparent transition-all duration-100 hover:text-white hover:bg-white/[0.03] ${
-                                    isActive
-                                      ? "text-[#e94560] border-l-[#e94560]"
-                                      : ""
+                                  `block py-2.5 pr-4 pl-12 text-[#8a8f95] text-[13px] border-l-[3px] border-transparent transition-all duration-100 hover:text-white hover:bg-white/[0.03] ${isActive
+                                    ? "text-[#e94560] border-l-[#e94560]"
+                                    : ""
                                   }`
                                 }
                               >
@@ -312,10 +321,9 @@ export const DashboardLayout = () => {
                           item.path === "/student"
                         }
                         className={({ isActive }) =>
-                          `flex items-center gap-3 py-2.5 px-5 text-[#8a8f95] text-sm cursor-pointer border-l-[3px] border-transparent transition-all duration-100 hover:bg-[#25292e] hover:text-white ${
-                            isActive
-                              ? "bg-[#25292e] text-white border-l-[#c41e3a]"
-                              : ""
+                          `flex items-center gap-3 py-2.5 px-5 text-[#8a8f95] text-sm cursor-pointer border-l-[3px] border-transparent transition-all duration-100 hover:bg-[#25292e] hover:text-white ${isActive
+                            ? "bg-[#25292e] text-white border-l-[#c41e3a]"
+                            : ""
                           }`
                         }
                       >
@@ -416,11 +424,10 @@ export const DashboardLayout = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center gap-1 py-1.5 px-2 min-w-[60px] text-[10px] font-medium transition-all ${
-                  isActive
+                className={`flex flex-col items-center justify-center gap-1 py-1.5 px-2 min-w-[60px] text-[10px] font-medium transition-all ${isActive
                     ? "text-[#c41e3a]"
                     : "text-gray-500 hover:text-[#c41e3a]"
-                }`}
+                  }`}
               >
                 <Icon size={20} strokeWidth={1.5} />
                 <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full">

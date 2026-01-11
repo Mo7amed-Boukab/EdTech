@@ -66,7 +66,7 @@ export const TeachersTable = ({
 
                   <td data-label="Teacher" className="no-label">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-[#c41e3a] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-red-50 text-red-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         {teacher.fullName.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -96,7 +96,7 @@ export const TeachersTable = ({
                   <td data-label="Classes" className="hide-tablet">
                     <div className="flex flex-wrap gap-1.5">
                       {teacher.assignedClasses &&
-                      teacher.assignedClasses.length > 0 ? (
+                        teacher.assignedClasses.length > 0 ? (
                         teacher.assignedClasses.map((cls, idx) => (
                           <span
                             key={cls.id || idx}

@@ -7,10 +7,11 @@ import { ClassModal } from "../components/ClassModal";
 import { DeleteConfirmationModal } from "../../../../components/DeleteConfirmationModal";
 import { classService } from "../../services/classService";
 import { teacherService } from "../../services/teacherService";
-import { useDebounce } from "../../../../hooks/useDebounce";
 import type { Class } from "../../types/class.types";
+import { useToast } from "../../../../hooks/useToast";
 
 export const ClassesManagement = () => {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("All");
   const [classes, setClasses] = useState<Class[]>([]);
@@ -24,9 +25,6 @@ export const ClassesManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
 
-  // Debounce search query for better performance
-  const debouncedSearch = useDebounce(searchQuery, 500);
-
   // Fetch classes from API
   const fetchClasses = async () => {
     try {
@@ -34,9 +32,9 @@ export const ClassesManagement = () => {
       setError(null);
 
       const filters = {
-        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(searchQuery && { search: searchQuery }),
         ...(levelFilter !== "All" && { level: levelFilter }),
-        limit: 100, // Get all classes for now
+        limit: 100,
       };
 
       const response = await classService.getAll(filters);
@@ -70,7 +68,7 @@ export const ClassesManagement = () => {
   useEffect(() => {
     fetchClasses();
     fetchTeachers();
-  }, [debouncedSearch, levelFilter]);
+  }, [searchQuery, levelFilter]);
 
   // Handlers
   const handleAddClass = () => {
@@ -93,11 +91,13 @@ export const ClassesManagement = () => {
 
     try {
       await classService.delete(selectedClass.id);
-      await fetchClasses(); // Refresh list
+      toast.success("Class deleted successfully");
+      await fetchClasses(); 
       setIsDeleteModalOpen(false);
       setSelectedClass(null);
     } catch (err: any) {
       console.error("Error deleting class:", err);
+      toast.error("Error deleting class");
     }
   };
 
@@ -106,9 +106,11 @@ export const ClassesManagement = () => {
       if (selectedClass) {
         // Update existing class
         await classService.update(selectedClass.id, classData);
+        toast.success("Class updated successfully");
       } else {
         // Create new class
         await classService.create(classData);
+        toast.success("Class created successfully");
       }
 
       await fetchClasses(); // Refresh list
@@ -116,6 +118,7 @@ export const ClassesManagement = () => {
       setSelectedClass(null);
     } catch (err: any) {
       console.error("Error saving class:", err);
+      toast.error(err.response?.data?.message || "Error saving class");
     }
   };
 

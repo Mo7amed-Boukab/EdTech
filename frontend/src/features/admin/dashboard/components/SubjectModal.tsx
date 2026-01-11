@@ -9,6 +9,7 @@ interface SubjectModalProps {
   subject?: any;
   availableClasses?: { id: string; name: string }[];
   availableTeachers?: { id: string; fullName: string }[];
+  hideTeacher?: boolean;
 }
 
 export const SubjectModal = ({
@@ -18,6 +19,7 @@ export const SubjectModal = ({
   subject,
   availableClasses = [],
   availableTeachers = [],
+  hideTeacher = false,
 }: SubjectModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -89,18 +91,20 @@ export const SubjectModal = ({
               />
             </div>
 
-            <div className="form-group">
-              <CustomSelect
-                label="Teacher"
-                value={formData.teacherId}
-                onChange={(val) => setFormData({ ...formData, teacherId: val })}
-                options={availableTeachers.map((t) => ({
-                  value: t.id,
-                  label: t.fullName,
-                }))}
-                placeholder="Select a teacher..."
-              />
-            </div>
+            {!hideTeacher && (
+              <div className="form-group">
+                <CustomSelect
+                  label="Teacher"
+                  value={formData.teacherId}
+                  onChange={(val) => setFormData({ ...formData, teacherId: val })}
+                  options={availableTeachers.map((t) => ({
+                    value: t.id,
+                    label: t.fullName,
+                  }))}
+                  placeholder="Select a teacher..."
+                />
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">

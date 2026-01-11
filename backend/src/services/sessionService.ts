@@ -72,30 +72,55 @@ async function checkSessionConflict(
 }
 
 export async function createSession(data: CreateSessionDto) {
-  // Verify constraints
+  console.log("Verifying class and subject...");
+  
+  // Verify Class exists
+  const classExists = await prisma.class.findUnique({
+    where: { id: data.classId },
+  });
+  if (!classExists) {
+    console.error("Class not found:", data.classId);
+    throw ApiError.notFound("Class not found");
+  }
+  console.log("Class found:", classExists.name);
+
+  // Verify Subject exists
   const subject = await prisma.subject.findUnique({
     where: { id: data.subjectId },
   });
-  if (!subject) throw ApiError.notFound("Subject not found");
-
-  if (subject.classId !== data.classId) {
-    throw ApiError.badRequest("Subject does not belong to this class");
+  if (!subject) {
+    console.error("Subject not found:", data.subjectId);
+    throw ApiError.notFound("Subject not found");
   }
+  console.log("Subject found:", subject.name);
+
+  // Note: We allow subjects to be used with any class
+  // Teachers can assign any subject to any class when creating sessions
+  console.log("Class-subject relationship check skipped (flexible assignment)");
 
   // Verify Teacher
-  if (!data.teacherId) throw ApiError.badRequest("Teacher ID is required");
+  if (!data.teacherId) {
+    console.error("Teacher ID is required");
+    throw ApiError.badRequest("Teacher ID is required");
+  }
   const teacher = await prisma.user.findUnique({
     where: { id: data.teacherId },
   });
-  if (!teacher || teacher.role !== "TEACHER")
+  if (!teacher || teacher.role !== "TEACHER") {
+    console.error("Invalid teacher ID");
     throw ApiError.badRequest("Invalid teacher ID");
+  }
+  console.log("Teacher found:", teacher.fullName);
 
   // Validate time order
   if (data.startTime >= data.endTime) {
+    console.error("Start time must be before end time");
     throw ApiError.badRequest("Start time must be before end time");
   }
+  console.log("Time order valid");
 
   // CONFLICT CHECK with time ranges
+  console.log("Checking session conflicts...");
   await checkSessionConflict(
     new Date(data.date),
     data.startTime,
@@ -103,7 +128,9 @@ export async function createSession(data: CreateSessionDto) {
     data.classId,
     data.teacherId!
   );
+  console.log("No conflicts found");
 
+  console.log("Creating session in database...");
   return prisma.session.create({
     data: {
       date: new Date(data.date),
@@ -218,9 +245,8 @@ export async function updateSession(
     });
     if (!subject) throw ApiError.notFound("Subject not found");
 
-    if (subject.classId !== targetClassId) {
-      throw ApiError.badRequest("Subject does not belong to the class");
-    }
+    // Note: We allow subjects to be used with any class for flexible assignment
+    // Teachers can assign any subject to any class when creating/updating sessions
   }
 
   // Validate time order if times are being updated

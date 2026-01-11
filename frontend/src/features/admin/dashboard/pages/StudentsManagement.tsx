@@ -7,11 +7,12 @@ import { StudentModal } from "../components/StudentModal";
 import { DeleteConfirmationModal } from "../../../../components/DeleteConfirmationModal";
 import { studentService } from "../../services/studentService";
 import { classService } from "../../services/classService";
-import { useDebounce } from "../../../../hooks/useDebounce";
 import type { Student } from "../../types/student.types";
 import type { Class } from "../../types/class.types";
+import { useToast } from "../../../../hooks/useToast";
 
 export const StudentsManagement = () => {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("All");
 
@@ -24,8 +25,6 @@ export const StudentsManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
-  const debouncedSearch = useDebounce(searchQuery, 500);
-
   // Fetch Data
   const fetchData = async () => {
     try {
@@ -34,7 +33,7 @@ export const StudentsManagement = () => {
 
       const filters: any = {
         limit: 100,
-        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(searchQuery && { search: searchQuery }),
       };
 
       if (classFilter !== "All") {
@@ -60,7 +59,7 @@ export const StudentsManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [debouncedSearch, classFilter]);
+  }, [searchQuery, classFilter]);
 
   // Handlers
   const handleAddStudent = () => {
@@ -82,11 +81,13 @@ export const StudentsManagement = () => {
     if (!selectedStudent) return;
     try {
       await studentService.delete(selectedStudent.id);
+      toast.success("Student deleted successfully");
       await fetchData();
       setIsDeleteModalOpen(false);
       setSelectedStudent(null);
     } catch (err: any) {
       console.error("Error deleting student:", err);
+      toast.error("Error deleting student");
     }
   };
 
@@ -100,6 +101,7 @@ export const StudentsManagement = () => {
           password: studentData.password || undefined,
           classId: studentData.classId || undefined,
         });
+        toast.success("Student updated successfully");
       } else {
         // Create
         await studentService.create({
@@ -109,12 +111,14 @@ export const StudentsManagement = () => {
           role: "STUDENT",
           classId: studentData.classId || undefined,
         });
+        toast.success("Student created successfully");
       }
       await fetchData();
       setIsStudentModalOpen(false);
       setSelectedStudent(null);
     } catch (err: any) {
       console.error("Error saving student:", err);
+      toast.error(err.response?.data?.message || "Error saving student");
     }
   };
 

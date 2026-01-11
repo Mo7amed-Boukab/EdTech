@@ -69,7 +69,7 @@ export const StudentsTable = ({
 
                   <td data-label="Student" className="no-label">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-[#c41e3a] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-red-50 text-red-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         {student.fullName.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">

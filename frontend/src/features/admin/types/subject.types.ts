@@ -13,7 +13,7 @@ export interface Subject {
 
 export interface CreateSubjectDto {
   name: string;
-  classId: string;
+  classId?: string;
   teacherId?: string;
 }
 

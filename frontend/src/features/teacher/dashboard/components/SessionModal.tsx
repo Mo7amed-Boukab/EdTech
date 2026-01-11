@@ -6,6 +6,7 @@ import type {
   CreateSessionDto,
   UpdateSessionDto,
 } from "../../types/session.types";
+import { useToast } from "../../../../hooks/useToast";
 
 interface SessionModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface SessionModalProps {
   onSave: (data: CreateSessionDto | UpdateSessionDto) => void;
   session?: Session;
   availableClasses: { id: string; name: string }[];
-  availableSubjects: { id: string; name: string }[];
+  availableSubjects: { id: string; name: string; classId?: string }[];
 }
 
 export const SessionModal = ({
@@ -24,6 +25,7 @@ export const SessionModal = ({
   availableClasses,
   availableSubjects,
 }: SessionModalProps) => {
+  const { error: toastError } = useToast();
   const [formData, setFormData] = useState({
     date: "",
     startTime: "",
@@ -36,7 +38,9 @@ export const SessionModal = ({
   useEffect(() => {
     if (session) {
       const sessionDate = new Date(session.date);
-      const dateStr = sessionDate.toISOString().split("T")[0];
+      const dateStr = !isNaN(sessionDate.getTime())
+        ? sessionDate.toISOString().split("T")[0]
+        : "";
 
       setFormData({
         date: dateStr,
@@ -58,22 +62,73 @@ export const SessionModal = ({
     }
   }, [session, isOpen]);
 
+  // Filter subjects based on selected class
+  const filteredSubjects = formData.classId
+    ? availableSubjects.filter(
+      (subject) =>
+        !subject.classId || subject.classId === formData.classId
+    )
+    : availableSubjects;
+
+  // Handle class selection
+  const handleClassChange = (classId: string) => {
+    setFormData((prev) => {
+      const newData = { ...prev, classId };
+
+      // If current subject doesn't belong to new class, reset it
+      if (prev.subjectId) {
+        const selectedSubject = availableSubjects.find(
+          (s) => s.id === prev.subjectId
+        );
+        if (
+          selectedSubject?.classId &&
+          selectedSubject.classId !== classId
+        ) {
+          newData.subjectId = "";
+        }
+      }
+      return newData;
+    });
+  };
+
+  // Handle subject selection
+  const handleSubjectChange = (subjectId: string) => {
+    const selectedSubject = availableSubjects.find(
+      (s) => s.id === subjectId
+    );
+
+    setFormData((prev) => {
+      const newData = { ...prev, subjectId };
+      // If subject has a classId, auto-select that class
+      if (selectedSubject?.classId) {
+        newData.classId = selectedSubject.classId;
+      }
+      return newData;
+    });
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
+    if (!formData.classId || !formData.subjectId) {
+      toastError("Please select both class and subject");
+      return;
+    }
+
+    // Ensure date is in ISO format (YYYY-MM-DD)
     const sessionData = {
       date: formData.date,
       startTime: formData.startTime,
       endTime: formData.endTime,
-      room: formData.room,
+      room: formData.room.trim(),
       classId: formData.classId,
       subjectId: formData.subjectId,
     };
 
     onSave(sessionData);
-    onClose();
   };
 
   return (
@@ -136,7 +191,7 @@ export const SessionModal = ({
                 <CustomSelect
                   label="Class"
                   value={formData.classId}
-                  onChange={(val) => setFormData({ ...formData, classId: val })}
+                  onChange={handleClassChange}
                   options={availableClasses.map((c) => ({
                     value: c.id,
                     label: c.name,
@@ -148,10 +203,8 @@ export const SessionModal = ({
                 <CustomSelect
                   label="Subject"
                   value={formData.subjectId}
-                  onChange={(val) =>
-                    setFormData({ ...formData, subjectId: val })
-                  }
-                  options={availableSubjects.map((s) => ({
+                  onChange={handleSubjectChange}
+                  options={filteredSubjects.map((s) => ({
                     value: s.id,
                     label: s.name,
                   }))}

@@ -17,8 +17,10 @@ import { DeleteConfirmationModal } from "../../../../components/DeleteConfirmati
 import { teacherService } from "../../services/teacherService";
 import type { Session } from "../../types/session.types";
 import type { TeacherClass } from "../../types/teacher.types";
+import { useToast } from "../../../../hooks/useToast";
 
 export const TeacherSessions = () => {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("All");
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
@@ -31,16 +33,23 @@ export const TeacherSessions = () => {
 
   // Fetch classes and sessions
   useEffect(() => {
-    fetchClasses();
-    fetchSessions();
+    const fetchData = async () => {
+      try {
+        await Promise.all([fetchClasses(), fetchSessions()]);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchData();
   }, []);
 
   const fetchClasses = async () => {
     try {
       const response = await teacherService.getMyClasses({ limit: 100 });
-      setClasses(response.data);
+      setClasses(response.data || []);
     } catch (err: any) {
       console.error("Error fetching classes:", err);
+      // Don't block UI for class fetch fail, just log it
     }
   };
 
@@ -49,7 +58,7 @@ export const TeacherSessions = () => {
       setLoading(true);
       setError(null);
       const response = await teacherService.getSessions({ limit: 100 });
-      setSessions(response.data);
+      setSessions(response.data || []);
     } catch (err: any) {
       console.error("Error fetching sessions:", err);
       setError(err.response?.data?.message || "Failed to load sessions");
@@ -59,22 +68,35 @@ export const TeacherSessions = () => {
   };
 
   // Get unique subjects from classes
-  const availableSubjects = classes.flatMap((cls) => cls.subjects || []);
-  const uniqueSubjects = Array.from(
-    new Map(availableSubjects.map((s) => [s.id, s])).values()
+  // Each class has subjects, so we map them out effectively
+  const availableSubjects = classes.flatMap((cls) =>
+    (cls.subjects || []).map(sub => ({ ...sub, classId: cls.id }))
   );
+
+  const uniqueSubjectsMap = new Map();
+  availableSubjects.forEach(s => {
+    if (!uniqueSubjectsMap.has(s.id)) {
+      uniqueSubjectsMap.set(s.id, s);
+    }
+  });
+  const uniqueSubjects = Array.from(uniqueSubjectsMap.values());
 
   // Filter logic
   const filteredSessions = sessions.filter((session) => {
+    const subjectName = session.subject?.name || "";
+    const className = session.class?.name || "";
+
     const matchesSearch =
-      session.subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.class.name.toLowerCase().includes(searchQuery.toLowerCase());
+      subjectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      className.toLowerCase().includes(searchQuery.toLowerCase());
+
     const matchesClass =
-      classFilter === "All" || session.class.name === classFilter;
+      classFilter === "All" || className === classFilter;
+
     return matchesSearch && matchesClass;
   });
 
-  const classNames = Array.from(new Set(sessions.map((s) => s.class.name)));
+  const classNames = Array.from(new Set(sessions.map((s) => s.class?.name).filter(Boolean)));
 
   const handleEdit = (session: Session) => {
     setSelectedSession(session);
@@ -95,14 +117,16 @@ export const TeacherSessions = () => {
     try {
       if (selectedSession) {
         await teacherService.updateSession(selectedSession.id, sessionData);
+        toast.success("Session updated successfully");
       } else {
         await teacherService.createSession(sessionData);
+        toast.success("Session created successfully");
       }
       fetchSessions();
       setIsSessionModalOpen(false);
     } catch (err: any) {
       console.error("Error saving session:", err);
-      alert(err.response?.data?.message || "Failed to save session");
+      toast.error(err.response?.data?.message || "Failed to save session");
     }
   };
 
@@ -110,22 +134,27 @@ export const TeacherSessions = () => {
     if (!selectedSession) return;
     try {
       await teacherService.deleteSession(selectedSession.id);
+      toast.success("Session deleted successfully");
       fetchSessions();
       setIsDeleteModalOpen(false);
       setSelectedSession(null);
     } catch (err: any) {
       console.error("Error deleting session:", err);
-      alert(err.response?.data?.message || "Failed to delete session");
+      toast.error(err.response?.data?.message || "Failed to delete session");
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("fr-FR", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    try {
+      return new Date(dateString).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   if (loading) {
@@ -146,6 +175,7 @@ export const TeacherSessions = () => {
 
   return (
     <div className="animate-fadeIn">
+
       <div className="page-container">
         {/* Filters and Actions */}
         <div className="filters-bar">
@@ -229,14 +259,14 @@ export const TeacherSessions = () => {
                         </div>
                       </td>
                       <td data-label="Class">
-                        <span className="status-badge bg-[#c41e3a]/10 text-[#c41e3a]">
-                          {session.class.name}
+                        <span className="status-badge bg-red-50 text-red-700">
+                          {session.class?.name || 'N/A'}
                         </span>
                       </td>
                       <td data-label="Subject" className="hide-mobile">
                         <div className="flex items-center gap-2 text-gray-700">
                           <BookOpen size={14} className="text-gray-400" />
-                          {session.subject.name}
+                          {session.subject?.name || 'N/A'}
                         </div>
                       </td>
                       <td data-label="Time" className="hide-mobile">
@@ -252,7 +282,7 @@ export const TeacherSessions = () => {
                         </div>
                       </td>
                       <td className="text-center no-label hide-mobile">
-                        <div className="action-btns-desktop flex items-center justify-center gap-2">
+                        <div className="action-btns-desktop flex items-center justify-center gap-2 w-full h-full">
                           <button
                             onClick={() => handleEdit(session)}
                             className="action-btn edit"
@@ -305,7 +335,7 @@ export const TeacherSessions = () => {
         onConfirm={handleConfirmDelete}
         itemName={
           selectedSession
-            ? `${selectedSession.class.name} - ${selectedSession.subject.name}`
+            ? `${selectedSession.class?.name} - ${selectedSession.subject?.name}`
             : ""
         }
         itemType="session"

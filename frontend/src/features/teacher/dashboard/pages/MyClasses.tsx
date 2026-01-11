@@ -130,7 +130,7 @@ export const MyClasses = () => {
                       <tr key={cls.id}>
                         <td data-label="Class" className="no-label">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded bg-[#c41e3a]/10 text-[#c41e3a] flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded bg-red-50 text-red-700 flex items-center justify-center shrink-0">
                               <GraduationCap size={16} />
                             </div>
                             <div>

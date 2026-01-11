@@ -1,99 +1,142 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchInput } from "../../../../components/SearchInput";
 import { CustomSelect } from "../../../../components/CustomSelect";
-import { GraduationCap } from "lucide-react";
+import {
+  Mail,
+  Loader2,
+  GraduationCap
+} from "lucide-react";
+import { teacherService } from "../../services/teacherService";
+import type { TeacherClass } from "../../types/teacher.types";
+
+interface Student {
+  id: string;
+  fullName: string;
+  email: string;
+  classId: string;
+  className: string;
+}
 
 export const TeacherStudents = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("All");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<TeacherClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data
-  const allStudents = [
-    {
-      id: 1,
-      fullName: "Alice Martin",
-      class: { name: "Terminale S1" },
-      email: "alice.m@school.com",
-      absenceCount: 2,
-    },
-    {
-      id: 2,
-      fullName: "Bob Colin",
-      class: { name: "Terminale S1" },
-      email: "bob.c@school.com",
-      absenceCount: 5,
-    },
-    {
-      id: 3,
-      fullName: "Charlie Durand",
-      class: { name: "1ère S2" },
-      email: "charlie.d@school.com",
-      absenceCount: 1,
-    },
-    {
-      id: 4,
-      fullName: "Diane Lo",
-      class: { name: "2nde 3" },
-      email: "diane.l@school.com",
-      absenceCount: 3,
-    },
-    {
-      id: 5,
-      fullName: "Eve Peron",
-      class: { name: "Terminale S1" },
-      email: "eve.p@school.com",
-      absenceCount: 4,
-    },
-  ];
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  // Filter logic
-  const filteredStudents = allStudents.filter((student) => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // 1. Get Teacher's Classes
+      const classesRes = await teacherService.getMyClasses({ limit: 100 });
+      const teacherClasses = classesRes.data;
+      setClasses(teacherClasses);
+
+      // 2. For each class, fetch details (which includes students)
+      // Note: This matches the logic discussed where we fetch class details to get students
+      // Ideally backend ends providing a 'getMyStudents' would be better performance wise.
+      const studentsPromises = teacherClasses.map(cls => teacherService.getClassById(cls.id));
+      const classesDetails = await Promise.all(studentsPromises);
+
+      // 3. Flatten students
+      const allStudents: Student[] = [];
+      classesDetails.forEach(cls => {
+        // We know from backend service analysis that getClassById returns `students` array
+        // We need to type cast or ensure types are correct. 
+        // The TeacherClass type in frontend might not fully reflect the backend response of getClassById yet.
+        // We'll treat cls as any for accessing students safely.
+        const clsWithStudents = cls as any;
+        if (clsWithStudents.students && Array.isArray(clsWithStudents.students)) {
+          clsWithStudents.students.forEach((s: any) => {
+            allStudents.push({
+              id: s.id,
+              fullName: s.fullName,
+              email: s.email,
+              classId: cls.id,
+              className: cls.name
+            });
+          });
+        }
+      });
+
+      setStudents(allStudents);
+
+    } catch (err: any) {
+      console.error("Error fetching students:", err);
+      setError("Failed to load students");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesClass =
-      classFilter === "All" || student.class?.name === classFilter;
+      classFilter === "All" || student.className === classFilter;
     return matchesSearch && matchesClass;
   });
 
-  // Get unique classes for filter
-  const classes = Array.from(
-    new Set(allStudents.map((s) => s.class?.name).filter(Boolean))
-  );
+  const classNames = Array.from(new Set(classes.map((c) => c.name)));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn">
+
       <div className="page-container">
-        {/* Actions Bar */}
+        {/* Filters */}
         <div className="filters-bar">
           <div className="filters-bar-left">
             <div className="w-full-mobile">
               <SearchInput
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder="Search students..."
               />
             </div>
             <div className="w-full-mobile">
               <CustomSelect
                 value={classFilter}
                 onChange={setClassFilter}
-                options={["All", ...classes]}
+                options={["All", ...classNames]}
                 placeholder="Class"
               />
             </div>
           </div>
         </div>
 
+        {/* Table */}
         <div className="card">
           <div className="table-responsive-wrapper">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Student Name</th>
                   <th>Email</th>
                   <th>Class</th>
-                  <th>Absences</th>
+                  <th>Attendance</th>
+                  {/* Teachers usually don't need Actions on students except maybe 'View Details' later on */}
                 </tr>
               </thead>
               <tbody>
@@ -105,38 +148,34 @@ export const TeacherStudents = () => {
                   </tr>
                 ) : (
                   filteredStudents.map((student) => (
-                    <tr key={student.id}>
-                      <td>
+                    <tr key={`${student.id}-${student.classId}`}>
+                      <td data-label="Student Name">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded bg-[#c41e3a]/10 text-[#c41e3a] flex items-center justify-center text-sm font-semibold">
-                            {student.fullName.charAt(0)}
+                          <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-700">
+                            <span className="font-medium text-sm">
+                              {student.fullName.charAt(0).toUpperCase()}
+                            </span>
                           </div>
-                          <div className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-900">
                             {student.fullName}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="text-gray-600">{student.email}</td>
-                      <td>
-                        <div className="flex items-center gap-1.5">
-                          <GraduationCap size={14} className="text-gray-400" />
-                          <span className="text-gray-700 font-medium">
-                            {student.class?.name || "-"}
                           </span>
                         </div>
                       </td>
-                      <td>
-                        <span
-                          className={`status-badge ${
-                            student.absenceCount > 3
-                              ? "bg-red-100 text-[#c41e3a]"
-                              : student.absenceCount > 0
-                              ? "bg-orange-100 text-orange-700"
-                              : "bg-green-100 text-green-700"
-                          }`}
-                        >
-                          {student.absenceCount} absence
-                          {student.absenceCount > 1 ? "s" : ""}
+                      <td data-label="Email">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Mail size={14} />
+                          {student.email}
+                        </div>
+                      </td>
+                      <td data-label="Class">
+                        <span className="status-badge bg-red-50 text-red-700 flex items-center gap-1 w-fit">
+                          <GraduationCap size={14} />
+                          {student.className}
+                        </span>
+                      </td>
+                      <td data-label="Attendance">
+                        <span className="status-badge bg-gray-100 text-gray-600">
+                          N/A
                         </span>
                       </td>
                     </tr>

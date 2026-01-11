@@ -7,11 +7,12 @@ import { TeacherModal } from "../components/TeacherModal";
 import { DeleteConfirmationModal } from "../../../../components/DeleteConfirmationModal";
 import { teacherService } from "../../services/teacherService";
 import { classService } from "../../services/classService";
-import { useDebounce } from "../../../../hooks/useDebounce";
 import type { Class } from "../../types/class.types";
 import type { Teacher } from "../../types/teacher.types";
+import { useToast } from "../../../../hooks/useToast";
 
 export const TeachersManagement = () => {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("All");
 
@@ -24,8 +25,6 @@ export const TeachersManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
 
-  const debouncedSearch = useDebounce(searchQuery, 500);
-
   // Fetch Data
   const fetchData = async () => {
     try {
@@ -34,7 +33,7 @@ export const TeachersManagement = () => {
 
       // Parallel fetch
       const [teachersRes, classesRes] = await Promise.all([
-        teacherService.getAll({ limit: 100, search: debouncedSearch }),
+        teacherService.getAll({ limit: 100, search: searchQuery }),
         classService.getAll({ limit: 100 }),
       ]);
 
@@ -52,7 +51,7 @@ export const TeachersManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [debouncedSearch]);
+  }, [searchQuery]);
 
   // Prepare table data
   const tableTeachers = useMemo(() => {
@@ -105,11 +104,13 @@ export const TeachersManagement = () => {
     if (!selectedTeacher) return;
     try {
       await teacherService.delete(selectedTeacher.id);
+      toast.success("Teacher deleted successfully");
       await fetchData();
       setIsDeleteModalOpen(false);
       setSelectedTeacher(null);
     } catch (err: any) {
       console.error("Error deleting teacher:", err);
+      toast.error("Error deleting teacher");
     }
   };
 
@@ -133,7 +134,7 @@ export const TeachersManagement = () => {
         });
       }
 
-      // Current assigned classes for this teacher (from allClasses state)
+      // Current assigned classes for this teacher 
       const currentClassIds = allClasses
         .filter((c) => c.teacher?.id === savedTeacher.id)
         .map((c) => c.id);
@@ -150,7 +151,7 @@ export const TeachersManagement = () => {
       // Classes to unassign (removed ones) - set teacherId to null
       for (const classId of currentClassIds) {
         if (!newClassIds.includes(classId)) {
-          // Unassign by setting teacherId to null (empty string in API)
+          // Unassign by setting teacherId to null 
           await classService.update(classId, { teacherId: "" });
         }
       }
@@ -158,8 +159,10 @@ export const TeachersManagement = () => {
       await fetchData();
       setIsTeacherModalOpen(false);
       setSelectedTeacher(null);
+      toast.success(selectedTeacher ? "Teacher updated successfully" : "Teacher created successfully");
     } catch (err: any) {
       console.error("Error saving teacher:", err);
+      toast.error(err.response?.data?.message || "Error saving teacher");
     }
   };
 

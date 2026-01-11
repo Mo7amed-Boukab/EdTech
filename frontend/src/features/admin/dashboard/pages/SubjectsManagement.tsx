@@ -8,11 +8,12 @@ import { DeleteConfirmationModal } from "../../../../components/DeleteConfirmati
 import { subjectService } from "../../services/subjectService";
 import { classService } from "../../services/classService";
 import { teacherService } from "../../services/teacherService";
-import { useDebounce } from "../../../../hooks/useDebounce";
 import type { Subject } from "../../types/subject.types";
 import type { Class } from "../../types/class.types";
+import { useToast } from "../../../../hooks/useToast";
 
 export const SubjectsManagement = () => {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("All");
 
@@ -29,8 +30,6 @@ export const SubjectsManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
 
-  const debouncedSearch = useDebounce(searchQuery, 500);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -38,7 +37,7 @@ export const SubjectsManagement = () => {
 
       const filters: any = {
         limit: 100,
-        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(searchQuery && { search: searchQuery }),
         ...(classFilter !== "All" && { classId: classFilter }),
       };
 
@@ -69,7 +68,7 @@ export const SubjectsManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [debouncedSearch, classFilter]);
+  }, [searchQuery, classFilter]);
 
   // Handlers
   const handleAddSubject = () => {
@@ -91,12 +90,13 @@ export const SubjectsManagement = () => {
     if (!selectedSubject) return;
     try {
       await subjectService.delete(selectedSubject.id);
+      toast.success("Subject deleted successfully");
       await fetchData();
       setIsDeleteModalOpen(false);
       setSelectedSubject(null);
     } catch (err: any) {
       console.error("Error deleting subject:", err);
-      alert("Erreur lors de la suppression");
+      toast.error("Error deleting subject");
     }
   };
 
@@ -105,16 +105,18 @@ export const SubjectsManagement = () => {
       if (selectedSubject) {
         // Update
         await subjectService.update(selectedSubject.id, subjectData);
+        toast.success("Subject updated successfully");
       } else {
         // Create
         await subjectService.create(subjectData);
+        toast.success("Subject created successfully");
       }
       await fetchData();
       setIsSubjectModalOpen(false);
       setSelectedSubject(null);
     } catch (err: any) {
       console.error("Error saving subject:", err);
-      alert(err.response?.data?.message || "Erreur lors de l'enregistrement");
+      toast.error(err.response?.data?.message || "Error saving subject");
     }
   };
 

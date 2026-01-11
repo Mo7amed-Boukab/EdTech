@@ -28,7 +28,18 @@ export class SessionController {
       }: CreateSessionDto = req.body;
       const { userId } = req.user!;
 
+      console.log("📝 Creating session with data:", {
+        date,
+        startTime,
+        endTime,
+        room,
+        classId,
+        subjectId,
+        teacherId: userId,
+      });
+
       if (!date || !startTime || !endTime || !room || !classId || !subjectId) {
+        console.error("❌ Missing required fields");
         throw ApiError.badRequest(
           "Date, Start Time, End Time, Room, Class ID, and Subject ID are required"
         );
@@ -43,8 +54,10 @@ export class SessionController {
         subjectId,
         teacherId: userId,
       });
+      console.log("✅ Session created successfully:", session.id);
       ApiResponse.created(res, session, "Session created successfully");
     } catch (err: any) {
+      console.error("❌ Error creating session:", err.message);
       next(err instanceof ApiError ? err : ApiError.internal(err.message));
     }
   }
