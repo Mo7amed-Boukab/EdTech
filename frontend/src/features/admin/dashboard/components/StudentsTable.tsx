@@ -32,7 +32,7 @@ export const StudentsTable = ({
               <th>Student</th>
               <th>Class</th>
               <th className="hide-mobile">Registration Date</th>
-              <th className="text-center hide-mobile">Actions</th>
+              <th className="text-left hide-mobile">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -109,8 +109,8 @@ export const StudentsTable = ({
                       day: "numeric",
                     })}
                   </td>
-                  <td className="text-center no-label hide-mobile">
-                    <div className="action-btns-desktop flex items-center justify-center gap-2">
+                  <td className="text-left no-label hide-mobile">
+                    <div className="action-btns-desktop flex items-center justify-start gap-2">
                       <button
                         onClick={() => onEdit(student)}
                         className="action-btn edit"
@@ -134,24 +134,7 @@ export const StudentsTable = ({
         </table>
       </div>
 
-      {/* Pagination Footer */}
-      {students.length > 0 && (
-        <div className="table-footer">
-          <span className="text-sm text-gray-500">
-            Showing{" "}
-            <span className="font-semibold text-gray-700">
-              {students.length}
-            </span>{" "}
-            student(s)
-          </span>
-          <div className="pagination">
-            <button className="pagination-btn" disabled>
-              Previous
-            </button>
-            <button className="pagination-btn">Next</button>
-          </div>
-        </div>
-      )}
+      {/* Pagination Removed */}
     </div>
   );
 };

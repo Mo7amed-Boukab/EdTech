@@ -42,4 +42,4 @@ USER appuser
 EXPOSE 3000
 
 # Start application
-CMD ["node", "dist/server.js"]
+CMD sh -c "npx prisma migrate deploy && if [ \"$SEED_DB\" = \"true\" ]; then npm run seed:prod; fi && node dist/server.js"

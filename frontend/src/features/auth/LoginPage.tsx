@@ -134,7 +134,7 @@ export const LoginPage = () => {
                 className="absolute right-1 flex items-center justify-center w-10 h-10 bg-transparent border-none text-white/60 cursor-pointer hover:text-white/90 transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
           </div>

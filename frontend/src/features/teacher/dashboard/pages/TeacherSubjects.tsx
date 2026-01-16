@@ -8,6 +8,7 @@ import {
   Trash2,
   Book,
   Loader2,
+  GraduationCap
 } from "lucide-react";
 import { useToast } from "../../../../hooks/useToast";
 import { useAuth } from "../../../../context/AuthContext";
@@ -187,7 +188,7 @@ export const TeacherSubjects = () => {
                 <tr>
                   <th>Name</th>
                   <th>Class</th>
-                  <th className="text-center hide-mobile">Actions</th>
+                  <th className="text-left hide-mobile">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,39 +201,67 @@ export const TeacherSubjects = () => {
                 ) : (
                   filteredSubjects.map((subject) => (
                     <tr key={subject.id}>
-                      <td data-label="Name">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <div className="w-8 h-8 rounded bg-red-50 text-red-700 flex items-center justify-center flex-shrink-0">
-                            <Book size={15} strokeWidth={2} />
+                      {/* Mobile Action Menu (moved to separate cell) */}
+                      <td
+                        className="action-menu-cell"
+                        style={{ padding: 0, border: 0, width: 0 }}
+                      >
+                        <ActionMenu
+                          actions={[
+                            {
+                              label: "Edit",
+                              icon: <Edit2 size={16} />,
+                              onClick: () => handleEdit(subject),
+                            },
+                            {
+                              label: "Delete",
+                              icon: <Trash2 size={16} />,
+                              onClick: () => handleDelete(subject),
+                              variant: "danger",
+                            },
+                          ]}
+                        />
+                      </td>
+
+                      <td data-label="Name" className="no-label">
+                        <div className="flex flex-col md:block">
+                          {/* Subject Name Section */}
+                          <div className="flex items-center gap-3 text-gray-700 mb-3 md:mb-0">
+                            <div className="w-8 h-8 rounded bg-red-50 text-red-700 flex items-center justify-center flex-shrink-0">
+                              <Book size={15} strokeWidth={2} />
+                            </div>
+                            <span className="font-medium text-gray-900">
+                              {subject.name}
+                            </span>
                           </div>
-                          <span className="font-medium">{subject.name}</span>
-                        </div>
-                        {/* Mobile Action Menu */}
-                        <div className="show-mobile">
-                          <ActionMenu
-                            actions={[
-                              {
-                                label: "Edit",
-                                icon: <Edit2 size={16} />,
-                                onClick: () => handleEdit(subject),
-                              },
-                              {
-                                label: "Delete",
-                                icon: <Trash2 size={16} />,
-                                onClick: () => handleDelete(subject),
-                                variant: "danger",
-                              },
-                            ]}
-                          />
+
+                          {/* Full Width Divider */}
+                          <div className="md:hidden border-t border-gray-100 -mx-4"></div>
+
+                          {/* Class Info Section */}
+                          <div className="md:hidden pt-3 gap-2 flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                              CLASS
+                            </span>
+                            <div className="flex items-center gap-1 text-gray-700">
+                              <GraduationCap
+                                size={16}
+                                className="text-gray-400"
+                              />
+                              <span className="font-medium text-sm">
+                                {subject.class?.name || "Unassigned"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td data-label="Class">
+                      <td data-label="Class" className="hide-mobile">
                         <span className="status-badge bg-red-50 text-red-700">
                           {subject.class?.name || "Unassigned"}
                         </span>
                       </td>
-                      <td className="text-center no-label hide-mobile">
-                        <div className="action-btns-desktop flex items-center justify-center gap-2 w-full h-full">
+                      <td className="text-left no-label hide-mobile">
+                        <div className="action-btns-desktop flex items-center justify-start gap-2">
                           <button
                             onClick={() => handleEdit(subject)}
                             className="action-btn edit"
@@ -257,16 +286,6 @@ export const TeacherSubjects = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        {filteredSubjects.length > 0 && (
-          <div className="table-footer">
-            <span className="text-sm text-gray-500">
-              Showing{" "}
-              <span className="font-medium">{filteredSubjects.length}</span>{" "}
-              subject(s)
-            </span>
-          </div>
-        )}
       </div>
 
       <SubjectModal

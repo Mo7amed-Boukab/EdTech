@@ -363,40 +363,52 @@ export const StudentSchedule = () => {
                     </div>
                   </div>
                 ) : (
-                  getSessionsForDay(WEEK_DAYS[selectedDay]).map((session) => (
-                    <div
-                      key={session.id}
-                      className="card border-l-4 border-l-[var(--primary)]"
-                      style={{ background: "white" }}
-                    >
+                  getSessionsForDay(WEEK_DAYS[selectedDay]).map((session) => {
+                    // Helper to format full date logic removed as it's no longer used in the card header
+
+                    return (
                       <div
-                        className="card-body"
-                        style={{ padding: "16px", background: "white" }}
+                        key={session.id}
+                        className="card border-l-4 border-l-[var(--primary)]"
+                        style={{ background: "white" }}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-[var(--text-primary)]">
-                              {session.subject}
-                            </h3>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-[var(--text-muted)]">
-                              <span className="flex items-center gap-1">
-                                <Clock size={14} />
-                                {session.startTime} - {session.endTime}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MapPin size={14} />
-                                {session.room}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <User size={14} />
-                                {session.teacher}
-                              </span>
+                        <div
+                          className="card-body"
+                          style={{ padding: "16px", background: "white" }}
+                        >
+                          {/* Added Time Header (Date removed as requested) */}
+                          <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100 text-[var(--text-muted)]">
+                            <Clock size={14} />
+                            <span className="text-sm font-medium">
+                              {session.startTime} - {session.endTime}
+                            </span>
+                          </div>
+
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start">
+                                <h3 className="font-semibold text-[var(--text-primary)]">
+                                  {session.subject}
+                                </h3>
+                              </div>
+
+                              <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-sm text-[var(--text-muted)]">
+                                {/* Placeholders for other info if needed, keeping Room and Teacher */}
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={14} />
+                                  {session.room}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <User size={14} />
+                                  {session.teacher}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

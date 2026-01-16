@@ -31,7 +31,7 @@ export const ClassesTable = ({
               <th className="hide-mobile">Level</th>
               <th className="hide-tablet">Main Teacher</th>
               <th>Students</th>
-              <th className="text-center hide-mobile">Actions</th>
+              <th className="text-left hide-mobile">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -98,8 +98,8 @@ export const ClassesTable = ({
                       <span>{cls.studentCount}</span>
                     </div>
                   </td>
-                  <td className="text-center no-label hide-mobile">
-                    <div className="action-btns-desktop flex items-center justify-center gap-2">
+                  <td className="text-left no-label hide-mobile">
+                    <div className="action-btns-desktop flex items-center justify-start gap-2">
                       <button
                         onClick={() => onEdit(cls)}
                         className="action-btn edit"

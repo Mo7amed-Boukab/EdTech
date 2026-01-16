@@ -32,7 +32,7 @@ export const SubjectsTable = ({
               <th>Subject</th>
               <th>Class</th>
               <th className="hide-mobile">Teacher</th>
-              <th className="text-center hide-mobile">Actions</th>
+              <th className="text-left hide-mobile">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -101,8 +101,8 @@ export const SubjectsTable = ({
                       </span>
                     </div>
                   </td>
-                  <td className="text-center no-label hide-mobile">
-                    <div className="action-btns-desktop flex items-center justify-center gap-2">
+                  <td className="text-left no-label hide-mobile">
+                    <div className="action-btns-desktop flex items-center justify-start gap-2">
                       <button
                         onClick={() => onEdit(subject)}
                         className="action-btn edit"

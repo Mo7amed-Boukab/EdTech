@@ -33,6 +33,10 @@ app.use(morgan('dev'));
   }
 })();
 
+app.get('/', (req, res) => {
+  res.json({ message: 'EdAcademy API is running' });
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/classes', classRouter);
 app.use('/api/users', userRouter);

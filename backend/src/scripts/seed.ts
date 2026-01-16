@@ -49,72 +49,26 @@ async function seedDummyData(admin: any) {
 
   // 1. Create Teachers
   console.log("Creating teachers...");
-  const teacherJS = await prisma.user.create({
-    data: {
-      fullName: "Prof. Ahmed Benali",
-      email: "ahmed.benali@teacher.com",
-      password: hashedPassword,
-      role: "TEACHER",
-    },
-  });
-
-  const teacherJava = await prisma.user.create({
-    data: {
-      fullName: "Prof. Sarah Mansouri",
-      email: "sarah.mansouri@teacher.com",
-      password: hashedPassword,
-      role: "TEACHER",
-    },
-  });
-
-  const teacherPHP = await prisma.user.create({
-    data: {
-      fullName: "Prof. Youssef Alami",
-      email: "youssef.alami@teacher.com",
-      password: hashedPassword,
-      role: "TEACHER",
-    },
-  });
+  const t1 = await prisma.user.create({ data: { fullName: "Prof. Ahmed Benali", email: "ahmed.benali@teacher.com", password: hashedPassword, role: "TEACHER" } });
+  const t2 = await prisma.user.create({ data: { fullName: "Prof. Sarah Mansouri", email: "sarah.mansouri@teacher.com", password: hashedPassword, role: "TEACHER" } });
+  const t3 = await prisma.user.create({ data: { fullName: "Prof. Youssef Alami", email: "youssef.alami@teacher.com", password: hashedPassword, role: "TEACHER" } });
   console.log("3 teachers created\n");
 
   // 2. Create Classes
   console.log("Creating classes...");
-  const classPHPLaravel = await prisma.class.create({
-    data: {
-      name: "PHP/Laravel", level: "A1", academicYear: "2025-2026",
-      createdById: admin.id, teacherId: teacherPHP.id,
-    },
-  });
-
-  const classPython = await prisma.class.create({
-    data: {
-      name: "Python", level: "A1", academicYear: "2025-2026",
-      createdById: admin.id, teacherId: null,
-    },
-  });
-
-  const classJS = await prisma.class.create({
-    data: {
-      name: "JavaScript/MERN", level: "A2", academicYear: "2025-2026",
-      createdById: admin.id, teacherId: teacherJS.id,
-    },
-  });
-
-  const classJava = await prisma.class.create({
-    data: {
-      name: "Java/Spring", level: "A2", academicYear: "2025-2026",
-      createdById: admin.id, teacherId: teacherJava.id,
-    },
-  });
+  const c1 = await prisma.class.create({ data: { name: "PHP/Laravel", level: "A1", academicYear: "2025-2026", createdById: admin.id, teacherId: t3.id } });
+  const c2 = await prisma.class.create({ data: { name: "Python", level: "A1", academicYear: "2025-2026", createdById: admin.id } });
+  const c3 = await prisma.class.create({ data: { name: "JavaScript/MERN", level: "A2", academicYear: "2025-2026", createdById: admin.id, teacherId: t1.id } });
+  const c4 = await prisma.class.create({ data: { name: "Java/Spring", level: "A2", academicYear: "2025-2026", createdById: admin.id, teacherId: t2.id } });
   console.log("4 classes created\n");
 
-  // 3. Create Students (5 per class = 20 total)
+  // 3. Create Students (Updated with more original names)
   console.log("Creating students...");
   const groups = [
-    { names: ["Amine Kadiri", "Fatima Zahrae", "Omar Benjelloun", "Khadija Lahlou", "Rachid Tazi"], classId: classPHPLaravel.id },
-    { names: ["Younes Idrissi", "Salma Bennani", "Hamza Chraibi", "Nadia Fassi", "Mehdi Ouazzani"], classId: classPython.id },
-    { names: ["Karim Berrada", "Leila Amrani", "Yassine El Khattabi", "Imane Squalli", "Adil Benjelloun"], classId: classJS.id },
-    { names: ["Soufiane Mohammadi", "Zineb Alaoui", "Reda Kettani", "Houda Benmoussa", "Tarik Senhaji"], classId: classJava.id },
+    { names: ["Amine Kadiri", "Fatima Zahrae", "Omar Benjelloun", "Khadija Lahlou", "Rachid Tazi"], classId: c1.id },
+    { names: ["Younes Idrissi", "Salma Bennani", "Hamza Chraibi", "Nadia Fassi", "Mehdi Ouazzani"], classId: c2.id },
+    { names: ["Karim Berrada", "Leila Amrani", "Yassine El Khattabi", "Imane Squalli", "Adil Benjelloun"], classId: c3.id },
+    { names: ["Soufiane Mohammadi", "Zineb Alaoui", "Reda Kettani", "Houda Benmoussa", "Tarik Senhaji"], classId: c4.id },
   ];
 
   const students = [];
@@ -132,10 +86,10 @@ async function seedDummyData(admin: any) {
   // 4. Create Subjects
   console.log("Creating subjects...");
   const subjectMap = [
-    { classId: classPHPLaravel.id, teacherId: teacherPHP.id, names: ["HTML", "CSS", "JavaScript Basics", "MySQL", "UML", "PHP", "Laravel", "React Basics"] },
-    { classId: classPython.id, teacherId: null, names: ["Python Fundamentals", "Django", "Flask", "Data Science", "Machine Learning"] },
-    { classId: classJS.id, teacherId: teacherJS.id, names: ["React.js", "Node.js", "Express.js", "MongoDB", "TypeScript", "Next.js", "Nest.js", "PostgreSQL"] },
-    { classId: classJava.id, teacherId: teacherJava.id, names: ["Java SE", "JEE", "Spring Framework", "Spring Boot", "Spring Security", "Hibernate", "Microservices"] },
+    { classId: c1.id, teacherId: t3.id, names: ["HTML", "CSS", "MySQL", "PHP", "Laravel"] },
+    { classId: c2.id, teacherId: null, names: ["Python Fundamentals", "Django", "Data Science"] },
+    { classId: c3.id, teacherId: t1.id, names: ["React.js", "Node.js", "MongoDB", "TypeScript"] },
+    { classId: c4.id, teacherId: t2.id, names: ["Java SE", "Spring Boot", "Hibernate"] },
   ];
 
   const subjects = [];
@@ -151,31 +105,23 @@ async function seedDummyData(admin: any) {
   // 5. Create Sessions
   console.log("Creating sessions...");
   const timeSlots = [
-    { start: "09:00", end: "10:30" }, { start: "10:45", end: "12:30" },
-    { start: "14:00", end: "15:30" }, { start: "15:45", end: "17:30" },
+    { start: "09:00", end: "10:30" }, { start: "14:00", end: "15:30" }
   ];
   const sessionDates = [new Date("2026-01-12"), new Date("2026-01-13"), new Date("2026-01-15"), new Date("2026-01-16")];
   const today = new Date("2026-01-14");
 
-  const rooms: Record<string, string> = {
-    [classPHPLaravel.id]: "Salle PHP-101",
-    [classPython.id]: "Salle Python-102",
-    [classJS.id]: "Salle JS-201",
-    [classJava.id]: "Salle Java-202",
-  };
-
   const sessions = [];
   for (const date of sessionDates) {
-    for (const classItem of [classPHPLaravel, classPython, classJS, classJava]) {
+    for (const classItem of [c1, c2, c3, c4]) {
       const classSubjs = subjects.filter(s => s.classId === classItem.id);
       for (let i = 0; i < timeSlots.length; i++) {
         const sub = classSubjs[i % classSubjs.length];
         sessions.push(await prisma.session.create({
           data: {
             date, startTime: timeSlots[i].start, endTime: timeSlots[i].end,
-            room: rooms[classItem.id],
+            room: `Salle ${classItem.name}`,
             classId: classItem.id, subjectId: sub.id,
-            teacherId: sub.teacherId ?? teacherJS.id,
+            teacherId: sub.teacherId ?? t1.id,
           },
         }));
       }
@@ -191,20 +137,28 @@ async function seedDummyData(admin: any) {
     for (const student of classStudents) {
       const random = Math.random();
       let status: "PRESENT" | "ABSENT" | "LATE";
-      let justification: "JUSTIFIED" | "NOT_JUSTIFIED" | null = null;
-
       if (random < 0.8) status = "PRESENT";
-      else if (random < 0.95) {
-        status = "ABSENT";
-        justification = random < 0.9 ? "NOT_JUSTIFIED" : "JUSTIFIED";
-      } else status = "LATE";
+      else if (random < 0.95) status = "ABSENT";
+      else status = "LATE";
 
       await prisma.attendance.create({
-        data: { sessionId: session.id, studentId: student.id, status, justification },
+        data: { sessionId: session.id, studentId: student.id, status },
       });
     }
   }
   console.log("Attendance records created\n");
+
+  // Summary Display
+  console.log("------------------------------------------");
+  console.log("RÉSUMÉ DES DONNÉES CRÉÉES :");
+  console.log("------------------------------------------");
+  console.log(`Admin    : ${admin.email} (password123)`);
+  console.log(`Teachers : ${t1.email}, ${t2.email}, ${t3.email}`);
+  console.log(`Students : 20 students (Ex: ${students[0].email}, ${students[10].email})`);
+  console.log(`Classes  : 4 (PHP, Python, JS, Java)`);
+  console.log(`Subjects : ${subjects.length} modules`);
+  console.log(`Sessions : ${sessions.length} séances créées`);
+  console.log("------------------------------------------\n");
 }
 
 async function main() {

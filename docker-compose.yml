@@ -31,6 +31,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       NODE_ENV: production
       SEED_DB: ${SEED_DB:-false}
+      SEED_MODE: ${SEED_MODE:-full}
     ports:
       - "3000:3000"
     depends_on:

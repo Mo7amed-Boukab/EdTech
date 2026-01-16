@@ -392,7 +392,6 @@ export const DashboardLayout = () => {
               </div>
               <span className="hidden sm:flex items-center gap-1 text-sm text-gray-800">
                 Hi {user?.fullName?.split(" ")[0] || "User"}
-                <ChevronDown size={12} className="text-gray-400" />
               </span>
             </div>
           </div>

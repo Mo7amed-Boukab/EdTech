@@ -29,7 +29,7 @@ export const TeachersTable = ({
               <th>Teacher</th>
               <th className="hide-mobile">Contact</th>
               <th className="hide-tablet">Assigned Classes</th>
-              <th className="text-center hide-mobile">Actions</th>
+              <th className="text-left hide-mobile">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -43,6 +43,11 @@ export const TeachersTable = ({
               teachers.map((teacher) => (
                 <tr key={teacher.id}>
                   {/* Mobile Action Menu */}
+                  {/* Mobile Action Menu is positioned absolutely by the table styles usually, or we can keep it here.
+                      The previous implementation had a specific cell for it.
+                      To match the image EXACTLY (menu top right), we might need to ensure the ActionMenu is positioned correctly.
+                      For now, we keep the ActionMenu cell but ensure the content cell expands correctly.
+                  */}
                   <td
                     className="action-menu-cell"
                     style={{ padding: 0, border: 0, width: 0 }}
@@ -65,16 +70,48 @@ export const TeachersTable = ({
                   </td>
 
                   <td data-label="Teacher" className="no-label">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-red-50 text-red-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                        {teacher.fullName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="cell-name truncate">
-                          {teacher.fullName}
+                    <div className="flex flex-col md:block">
+                      {/* Top Section: Avatar + Info */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-red-50 text-red-700 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                          {teacher.fullName.charAt(0).toUpperCase()}
                         </div>
-                        <div className="cell-subtitle truncate">
-                          ID: ...{teacher.id.toString().slice(-4)}
+                        <div className="min-w-0 flex-1">
+                          <div className="cell-name truncate">
+                            {teacher.fullName}
+                          </div>
+                          <div className="cell-subtitle truncate">
+                            <span className="text-[var(--text-muted)] md:hidden">
+                              {teacher.email}
+                            </span>
+                            <span className="hidden md:inline">
+                              ID: ...{teacher.id.toString().slice(-4)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mobile Divider & Bottom Section */}
+                      <div className="md:hidden mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          CLASS
+                        </span>
+                        <div className="flex flex-wrap gap-1 justify-end">
+                          {teacher.assignedClasses &&
+                            teacher.assignedClasses.length > 0 ? (
+                            teacher.assignedClasses.map((cls, idx) => (
+                              <span
+                                key={cls.id || idx}
+                                className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-50 px-2 py-1 rounded"
+                              >
+                                {cls.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">
+                              No classes
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -112,8 +149,8 @@ export const TeachersTable = ({
                       )}
                     </div>
                   </td>
-                  <td className="text-center no-label hide-mobile">
-                    <div className="action-btns-desktop flex items-center justify-center gap-2">
+                  <td className="text-left no-label hide-mobile">
+                    <div className="action-btns-desktop flex items-center justify-start gap-2">
                       <button
                         onClick={() => onEdit(teacher)}
                         className="action-btn edit"
@@ -137,24 +174,7 @@ export const TeachersTable = ({
         </table>
       </div>
 
-      {/* Pagination Footer */}
-      {teachers.length > 0 && (
-        <div className="table-footer">
-          <span className="text-sm text-gray-500">
-            Showing{" "}
-            <span className="font-semibold text-gray-700">
-              {teachers.length}
-            </span>{" "}
-            teacher(s)
-          </span>
-          <div className="pagination">
-            <button className="pagination-btn" disabled>
-              Previous
-            </button>
-            <button className="pagination-btn">Next</button>
-          </div>
-        </div>
-      )}
+      {/* Pagination Removed */}
     </div>
   );
 };

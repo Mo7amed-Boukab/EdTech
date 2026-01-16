@@ -109,7 +109,7 @@ export const StudentAttendance = () => {
                     {totalPresent}
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded flex items-center justify-center bg-[var(--success)]/10">
+                <div className="w-10 h-10 rounded hidden md:flex items-center justify-center bg-[var(--success)]/10">
                   <Check size={20} className="text-[var(--success)]" />
                 </div>
               </div>
@@ -127,7 +127,7 @@ export const StudentAttendance = () => {
                     {totalAbsent}
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded flex items-center justify-center bg-[var(--danger)]/10">
+                <div className="w-10 h-10 rounded hidden md:flex items-center justify-center bg-[var(--danger)]/10">
                   <X size={20} className="text-[var(--danger)]" />
                 </div>
               </div>
@@ -145,8 +145,8 @@ export const StudentAttendance = () => {
                     {totalLate}
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded flex items-center justify-center bg-[var(--warning)]/10">
-                  <Clock size={20} className="text-[var(--warning)]" />
+                <div className="w-10 h-10 rounded hidden md:flex items-center justify-center bg-[var(--warning)]/10">
+                  <Clock size={20} className="text-yellow-700" />
                 </div>
               </div>
             </div>
@@ -163,7 +163,7 @@ export const StudentAttendance = () => {
                     {justifiedCount}/{justifiedCount + unjustifiedCount}
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded flex items-center justify-center bg-[var(--primary)]/10">
+                <div className="w-10 h-10 rounded hidden md:flex items-center justify-center bg-[var(--primary)]/10">
                   <FileText size={20} className="text-[var(--primary)]" />
                 </div>
               </div>

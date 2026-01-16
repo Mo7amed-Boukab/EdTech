@@ -219,7 +219,7 @@ export const TeacherSessions = () => {
                   <th className="hide-mobile">Subject</th>
                   <th className="hide-mobile">Time</th>
                   <th className="hide-tablet">Room</th>
-                  <th className="text-center hide-mobile">Actions</th>
+                  <th className="text-left hide-mobile">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -251,14 +251,55 @@ export const TeacherSessions = () => {
                             ]}
                           />
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Calendar size={14} className="text-gray-400" />
-                          <span className="capitalize">
-                            {formatDate(session.date)}
-                          </span>
+
+                        <div className="flex flex-col md:block">
+                          {/* Date & Time Header (Mobile) */}
+                          <div className="flex flex-col md:flex-row md:items-center gap-2 text-gray-700 font-medium">
+                            <div className="flex items-center gap-2">
+                              <Calendar size={14} className="text-gray-400" />
+                              <span className="capitalize">
+                                {formatDate(session.date)}
+                              </span>
+                            </div>
+                            {/* Mobile Time next to Date */}
+                            <div className="md:hidden flex items-center gap-2 text-sm text-[var(--text-muted)] mt-1">
+                              <Clock size={12} />
+                              <span>{session.startTime} – {session.endTime}</span>
+                            </div>
+                          </div>
+
+                          {/* Mobile Details Block */}
+                          {/* Mobile Details Block - Horizontal Layout */}
+                          <div className="md:hidden mt-3 pt-3 border-t border-gray-100 flex items-start justify-between gap-4 text-sm">
+                            <div>
+                              <span className="text-xs text-gray-500 uppercase block mb-0.5">
+                                Class
+                              </span>
+                              <span className="status-badge bg-red-50 text-red-700 inline-block">
+                                {session.class?.name || "N/A"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-xs text-gray-500 uppercase block mb-0.5">
+                                Subject
+                              </span>
+                              <span className="font-medium text-gray-700">
+                                {session.subject?.name || "N/A"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-xs text-gray-500 uppercase block mb-0.5">
+                                Room
+                              </span>
+                              <div className="flex items-center gap-1 text-gray-700">
+                                <MapPin size={12} className="text-gray-400" />
+                                {session.room}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td data-label="Class">
+                      <td data-label="Class" className="hide-mobile">
                         <span className="status-badge bg-red-50 text-red-700">
                           {session.class?.name || 'N/A'}
                         </span>
@@ -281,8 +322,8 @@ export const TeacherSessions = () => {
                           {session.room}
                         </div>
                       </td>
-                      <td className="text-center no-label hide-mobile">
-                        <div className="action-btns-desktop flex items-center justify-center gap-2 w-full h-full">
+                      <td className="text-left no-label hide-mobile">
+                        <div className="action-btns-desktop flex items-center justify-start gap-2">
                           <button
                             onClick={() => handleEdit(session)}
                             className="action-btn edit"
@@ -307,16 +348,7 @@ export const TeacherSessions = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        {filteredSessions.length > 0 && (
-          <div className="table-footer">
-            <span className="text-sm text-gray-500">
-              Showing{" "}
-              <span className="font-medium">{filteredSessions.length}</span>{" "}
-              session(s)
-            </span>
-          </div>
-        )}
+        {/* Pagination Removed */}
       </div>
 
       {/* Modals */}

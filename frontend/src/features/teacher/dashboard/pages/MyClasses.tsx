@@ -174,15 +174,7 @@ export const MyClasses = () => {
           </div>
         )}
 
-        {/* Footer */}
-        {!loading && !error && classes.length > 0 && (
-          <div className="table-footer">
-            <span className="text-sm text-gray-500">
-              Showing <span className="font-medium">{classes.length}</span>{" "}
-              class(es)
-            </span>
-          </div>
-        )}
+        {/* Pagination Removed */}
       </div>
     </div>
   );

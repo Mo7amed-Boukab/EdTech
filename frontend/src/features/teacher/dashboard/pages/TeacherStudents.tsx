@@ -186,16 +186,7 @@ export const TeacherStudents = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        {filteredStudents.length > 0 && (
-          <div className="table-footer">
-            <span className="text-sm text-gray-500">
-              Showing{" "}
-              <span className="font-medium">{filteredStudents.length}</span>{" "}
-              student(s)
-            </span>
-          </div>
-        )}
+        {/* Pagination Removed */}
       </div>
     </div>
   );
